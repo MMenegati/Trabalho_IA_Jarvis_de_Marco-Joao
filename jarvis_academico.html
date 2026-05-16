@@ -753,29 +753,59 @@ Forneça exemplos práticos e casos de uso do material acadêmico.`;
     { role:'user', content: userContent }
   ];
 
-  const response = await fetch(API_URL, {
-    method:'POST',
-    headers:{ 
-      'Content-Type':'application/json',
-      'Authorization': `Bearer ${API_KEY}`
-    },
-    body: JSON.stringify({ model: MODEL, max_tokens:1024, messages, temperature: 0.7 })
-  });
+  console.log('📡 Enviando requisição para Gemma:', { url: API_URL, model: MODEL, mensagens: messages.length });
 
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error(`Erro HTTP ${response.status}:`, errorData);
-    const errorMsg = `Erro ${response.status}: ${response.statusText}. ${errorData ? 'Detalhes: ' + errorData.substring(0, 100) : 'Verifique a API Key e URL da Gemma.'}`;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+    const response = await fetch(API_URL, {
+      method:'POST',
+      headers:{ 
+        'Content-Type':'application/json',
+        'Authorization': `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({ model: MODEL, max_tokens:1024, messages, temperature: 0.7 }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log('✅ Resposta recebida:', { status: response.status, ok: response.ok });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error(`❌ Erro HTTP ${response.status}:`, errorData);
+      const errorMsg = `Erro ${response.status}: ${response.statusText}\n\nDetalhes:\n${errorData ? errorData.substring(0, 150) : 'Verifique a API Key e URL da Gemma.'}`;
+      state.chatHistory.push({ role:'user', content:userMessage });
+      state.chatHistory.push({ role:'assistant', content:errorMsg });
+      return errorMsg;
+    }
+
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content || 'Erro ao processar resposta do modelo. Tente novamente.';
+    console.log('✅ Resposta do modelo:', text.substring(0, 100) + '...');
+    state.chatHistory.push({ role:'user', content:userMessage });
+    state.chatHistory.push({ role:'assistant', content:text });
+    return text;
+  } catch(error) {
+    console.error('❌ Erro na requisição:', error.name, error.message);
+    
+    let errorMsg = '';
+    if (error.name === 'AbortError') {
+      errorMsg = '⏱️ Timeout: A requisição levou mais de 30 segundos.\n\nTente:\n1. Verificar conexão de internet\n2. O servidor pode estar lento\n3. Tente novamente em alguns segundos';
+    } else if (error.message.includes('Failed to fetch')) {
+      errorMsg = '🌐 Erro de Rede: Não conseguiu conectar ao servidor.\n\nPossíveis causas:\n1. Servidor https://llm.liaufms.org está offline\n2. Firewall/VPN bloqueando a requisição\n3. Problema de DNS\n\nAbra DevTools (F12 → Console) para mais detalhes';
+    } else if (error.message.includes('NetworkError')) {
+      errorMsg = '🌐 Erro de Conectividade: Verifique sua conexão de internet';
+    } else {
+      errorMsg = `❌ Erro desconhecido: ${error.message}`;
+    }
+    
     state.chatHistory.push({ role:'user', content:userMessage });
     state.chatHistory.push({ role:'assistant', content:errorMsg });
     return errorMsg;
   }
-
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content || 'Erro ao processar resposta do modelo. Tente novamente.';
-  state.chatHistory.push({ role:'user', content:userMessage });
-  state.chatHistory.push({ role:'assistant', content:text });
-  return text;
 }
 
 async function sendMessage() {
@@ -807,16 +837,17 @@ async function sendMessage() {
     }
     tm.remove();
   }
-
   const tid2 = showTyping();
   try {
+    console.log('💬 Enviando mensagem:', msg);
     const reply = await callLLM(msg, toolResults);
     removeTyping(tid2);
     appendMsg('jarvis', reply, toolCalls.map(c => c.tool).join(', '));
   } catch(e) {
     removeTyping(tid2);
-    appendMsg('jarvis', `❌ Erro: ${e.message}\n\nDicas:\n1. Verifique a internet\n2. Verifique se https://llm.liaufms.org está acessível\n3. Verifique a API Key\n4. Abra DevTools (F12) para ver detalhes no console`, '');
-    console.error('Erro ao chamar LLM:', e);
+    console.error('❌ Erro crítico ao chamar LLM:', e);
+    const debugInfo = `Erro: ${e.name} - ${e.message}\n\nDicas de Diagnóstico:\n1. Abra DevTools (F12)\n2. Clique em "🧪 Testar Conexão Gemma" no painel Logs\n3. Verifique Console para logs detalhados\n4. Erro exato: ${e.message}`;
+    appendMsg('jarvis', debugInfo, '');
   }
 
   document.getElementById('sendBtn').disabled = false;
@@ -917,7 +948,12 @@ async function testarAPI() {
   const resultDiv = document.getElementById('apiTestResult');
   resultDiv.innerHTML = '⏳ Testando conexão com Gemma...';
   
+  console.log('🧪 Iniciando teste de API:', { url: API_URL, model: MODEL });
+  
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
@@ -929,22 +965,45 @@ async function testarAPI() {
         max_tokens: 100,
         messages: [{ role: 'user', content: 'Teste: responda apenas com "OK"' }]
       }),
-      timeout: 10000
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (response.ok) {
       const data = await response.json();
       const text = data.choices?.[0]?.message?.content || 'Sem resposta';
-      resultDiv.innerHTML = `✅ <strong>API Funcional!</strong><br>Status: ${response.status}<br>Resposta: ${text.substring(0, 50)}...`;
+      resultDiv.innerHTML = `✅ <strong>API Funcional!</strong><br>Status: ${response.status}<br>Resposta: ${text.substring(0, 100)}`;
       resultDiv.style.color = '#10b981';
+      console.log('✅ API test passed:', text);
     } else {
-      resultDiv.innerHTML = `❌ <strong>Erro HTTP ${response.status}</strong><br>${response.statusText}<br>Dica: Verifique se a API Key está correta e a URL é acessível`;
+      const errorData = await response.text();
+      console.error(`❌ HTTP ${response.status}:`, errorData);
+      
+      let dica = 'Erro na API';
+      if (response.status === 401) dica = '🔐 Erro de Autenticação: API Key inválida ou expirada';
+      if (response.status === 403) dica = '🚫 Acesso Proibido: Verifique permissões da API Key';
+      if (response.status === 429) dica = '⏱️ Rate Limit: Muitas requisições. Aguarde alguns minutos';
+      if (response.status === 500) dica = '⚠️ Erro no Servidor: O serviço pode estar com problema';
+      if (response.status === 502 || response.status === 503) dica = '🔌 Serviço Indisponível: Endpoint pode estar offline';
+      
+      resultDiv.innerHTML = `❌ <strong>Erro HTTP ${response.status}</strong><br>${dica}<br><span style="font-size:10px; color:#666;">${errorData.substring(0, 100)}</span>`;
       resultDiv.style.color = '#ef4444';
     }
-  } catch (error) {
-    resultDiv.innerHTML = `❌ <strong>Erro de Conexão</strong><br>${error.message}<br>Dica: Verifique:<br>1. Conexão à internet<br>2. Se https://llm.liaufms.org está acessível<br>3. Firewall/proxy pode estar bloqueando`;
+  } catch(error) {
+    console.error('❌ Erro no teste de API:', error.name, error.message);
+    
+    let mensagem = '';
+    if (error.name === 'AbortError') {
+      mensagem = '⏱️ Timeout na conexão (15s)\n\n1. Servidor pode estar muito lento\n2. Rede instável\n3. Tente novamente em alguns segundos';
+    } else if (error.message.includes('Failed to fetch')) {
+      mensagem = '🌐 Erro de Rede - Servidor inacessível\n\n1. https://llm.liaufms.org offline?\n2. Firewall/proxy bloqueando?\n3. DNS resolvendo incorretamente?';
+    } else {
+      mensagem = `Erro: ${error.message}`;
+    }
+    
+    resultDiv.innerHTML = `❌ <strong>Erro de Conexão</strong><br>${mensagem}`;
     resultDiv.style.color = '#ef4444';
-    console.error('Erro no teste de API:', error);
   }
 }
 
