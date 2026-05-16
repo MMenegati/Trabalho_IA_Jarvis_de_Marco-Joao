@@ -426,6 +426,11 @@
         <span class="panel-title">LOGS DE TOOL CALLING</span>
       </div>
       <div class="panel-content">
+        <div style="margin-bottom: 16px; padding: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;">
+          <div style="font-size: 11px; font-family: var(--font-mono); color: var(--text3); margin-bottom: 8px;">TESTE DE API</div>
+          <button onclick="testarAPI()" style="width: 100%; padding: 10px; background: rgba(0,200,255,0.2); border: 1px solid var(--border2); color: var(--accent); border-radius: 4px; cursor: pointer; font-family: var(--font-sans); font-size: 12px;">🧪 Testar Conexão Gemma</button>
+          <div id="apiTestResult" style="margin-top: 8px; font-size: 11px; color: var(--text3);"></div>
+        </div>
         <div class="stats-row" id="logStats"></div>
         <div class="section-title">histórico de chamadas</div>
         <div id="logList"></div>
@@ -757,14 +762,22 @@ Forneça exemplos práticos e casos de uso do material acadêmico.`;
     body: JSON.stringify({ model: MODEL, max_tokens:1024, messages, temperature: 0.7 })
   });
 
+  if (!response.ok) {
+    const errorData = await response.text();
+    console.error(`Erro HTTP ${response.status}:`, errorData);
+    const errorMsg = `Erro ${response.status}: ${response.statusText}. ${errorData ? 'Detalhes: ' + errorData.substring(0, 100) : 'Verifique a API Key e URL da Gemma.'}`;
+    state.chatHistory.push({ role:'user', content:userMessage });
+    state.chatHistory.push({ role:'assistant', content:errorMsg });
+    return errorMsg;
+  }
+
   const data = await response.json();
-  const text = data.choices?.[0]?.message?.content || 'Erro ao conectar com o modelo. Verifique credenciais do Gemma.';
+  const text = data.choices?.[0]?.message?.content || 'Erro ao processar resposta do modelo. Tente novamente.';
   state.chatHistory.push({ role:'user', content:userMessage });
   state.chatHistory.push({ role:'assistant', content:text });
   return text;
 }
 
-// ── ENVIO DE MENSAGEM ─────────────────────────────────────────────────────
 async function sendMessage() {
   const input = document.getElementById('chatInput');
   const msg = input.value.trim();
@@ -802,7 +815,8 @@ async function sendMessage() {
     appendMsg('jarvis', reply, toolCalls.map(c => c.tool).join(', '));
   } catch(e) {
     removeTyping(tid2);
-    appendMsg('jarvis', 'Erro ao conectar com o modelo. Verifique a configuração da API.', '');
+    appendMsg('jarvis', `❌ Erro: ${e.message}\n\nDicas:\n1. Verifique a internet\n2. Verifique se https://llm.liaufms.org está acessível\n3. Verifique a API Key\n4. Abra DevTools (F12) para ver detalhes no console`, '');
+    console.error('Erro ao chamar LLM:', e);
   }
 
   document.getElementById('sendBtn').disabled = false;
@@ -896,6 +910,42 @@ function addTask() {
   input.value = '';
   logTool('adicionar_tarefa', { texto:text, prioridade:priority }, `Tarefa "${text}" adicionada`);
   renderTasks();
+}
+
+// ── TESTE DE API GEMMA ─────────────────────────────────────────────────────
+async function testarAPI() {
+  const resultDiv = document.getElementById('apiTestResult');
+  resultDiv.innerHTML = '⏳ Testando conexão com Gemma...';
+  
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 100,
+        messages: [{ role: 'user', content: 'Teste: responda apenas com "OK"' }]
+      }),
+      timeout: 10000
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content || 'Sem resposta';
+      resultDiv.innerHTML = `✅ <strong>API Funcional!</strong><br>Status: ${response.status}<br>Resposta: ${text.substring(0, 50)}...`;
+      resultDiv.style.color = '#10b981';
+    } else {
+      resultDiv.innerHTML = `❌ <strong>Erro HTTP ${response.status}</strong><br>${response.statusText}<br>Dica: Verifique se a API Key está correta e a URL é acessível`;
+      resultDiv.style.color = '#ef4444';
+    }
+  } catch (error) {
+    resultDiv.innerHTML = `❌ <strong>Erro de Conexão</strong><br>${error.message}<br>Dica: Verifique:<br>1. Conexão à internet<br>2. Se https://llm.liaufms.org está acessível<br>3. Firewall/proxy pode estar bloqueando`;
+    resultDiv.style.color = '#ef4444';
+    console.error('Erro no teste de API:', error);
+  }
 }
 
 function renderRAG() {
