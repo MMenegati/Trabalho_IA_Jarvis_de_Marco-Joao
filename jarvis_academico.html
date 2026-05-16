@@ -335,6 +335,10 @@
       <i class="ti ti-terminal"></i>
       <span class="tooltip">Logs de Ferramentas</span>
     </button>
+    <button class="nav-btn" onclick="showPanel('settings')" id="nb-settings" style="margin-top: auto;">
+      <i class="ti ti-settings"></i>
+      <span class="tooltip">Configurações</span>
+    </button>
   </div>
 
   <div class="main">
@@ -436,6 +440,51 @@
         <div id="logList"></div>
       </div>
     </div>
+
+    <!-- SETTINGS PANEL -->
+    <div class="panel panel-hidden" id="panel-settings">
+      <div class="panel-header">
+        <i class="ti ti-settings" style="color:var(--accent)"></i>
+        <span class="panel-title">⚙️ CONFIGURAÇÕES</span>
+      </div>
+      <div class="panel-content">
+        <div style="margin-bottom: 20px;">
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px; background: var(--bg3); border-radius: 6px;">
+            <input type="checkbox" id="offlineMode" onchange="toggleOfflineMode()" style="width: 18px; height: 18px; cursor: pointer;">
+            <span>📴 Modo Offline (Respostas Simuladas)</span>
+          </label>
+          <div style="font-size: 11px; color: var(--text3); margin-top: 5px; margin-left: 28px;">
+            Ativa respostas pré-configuradas quando Gemma está inacessível
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px; padding: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;">
+          <label style="display: block; margin-bottom: 8px; font-size: 12px; color: var(--text2);">🔗 URL da API</label>
+          <input type="text" id="apiUrl" placeholder="https://..." style="width: 100%; padding: 8px; background: var(--bg2); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-family: var(--font-mono); font-size: 11px; margin-bottom: 8px;">
+          <button onclick="saveApiConfig()" style="width: 100%; padding: 8px; background: var(--accent2); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">💾 Salvar URL</button>
+        </div>
+
+        <div style="margin-bottom: 20px; padding: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;">
+          <label style="display: block; margin-bottom: 8px; font-size: 12px; color: var(--text2);">🔑 API Key</label>
+          <input type="password" id="apiKey" placeholder="sk-..." style="width: 100%; padding: 8px; background: var(--bg2); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-family: var(--font-mono); font-size: 11px; margin-bottom: 8px;">
+          <button onclick="toggleApiKeyVisibility()" style="width: 100%; padding: 6px; background: rgba(255,255,255,0.1); color: var(--text3); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; margin-bottom: 8px;">👁️ Mostrar/Ocultar</button>
+          <button onclick="saveApiConfig()" style="width: 100%; padding: 8px; background: var(--accent2); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">💾 Salvar Key</button>
+        </div>
+
+        <div style="margin-bottom: 20px; padding: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;">
+          <label style="display: block; margin-bottom: 8px; font-size: 12px; color: var(--text2);">🤖 Modelo</label>
+          <input type="text" id="modelName" placeholder="gemma-3-12b-it" style="width: 100%; padding: 8px; background: var(--bg2); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-family: var(--font-mono); font-size: 11px; margin-bottom: 8px;">
+          <button onclick="saveApiConfig()" style="width: 100%; padding: 8px; background: var(--accent2); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">💾 Salvar Modelo</button>
+        </div>
+
+        <div style="padding: 12px; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.3); border-radius: 6px;">
+          <div style="font-size: 12px; color: var(--text2); margin-bottom: 8px;">⚡ Alternativas de API:</div>
+          <button onclick="setApiPreset('ollama')" style="width: 100%; padding: 8px; margin-bottom: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 11px;">🐳 Ollama Local (localhost:11434)</button>
+          <button onclick="setApiPreset('openai')" style="width: 100%; padding: 8px; margin-bottom: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 11px;">🔑 OpenAI API</button>
+          <button onclick="resetApiConfig()" style="width: 100%; padding: 8px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); border-radius: 4px; cursor: pointer; font-size: 11px;">🔄 Restaurar Padrão</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -443,9 +492,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIGURAÇÃO DA API - GEMMA 12B (Exigência do trabalho prático)
 // ─────────────────────────────────────────────────────────────────────────────
-const API_URL = 'https://llm.liaufms.org/v1/gemma-3-12b-it/chat/completions';
-const API_KEY = 'Cxt2ftLF7d3mHS2JdiFqB-eSDAQeZvFATPXPs02lV9A';
-const MODEL   = 'google/gemma-3-12b-it';
+let API_URL = localStorage.getItem('jarvis_api_url') || 'https://llm.liaufms.org/v1/gemma-3-12b-it/chat/completions';
+let API_KEY = localStorage.getItem('jarvis_api_key') || 'Cxt2ftLF7d3mHS2JdiFqB-eSDAQeZvFATPXPs02lV9A';
+let MODEL   = localStorage.getItem('jarvis_model') || 'google/gemma-3-12b-it';
+let OFFLINE_MODE = localStorage.getItem('jarvis_offline_mode') === 'true' ? true : false;
+
+// ── RESPOSTAS MOCK PARA MODO OFFLINE ──────────────────────────────────────
+const mockResponses = {
+  'o que é inteligência artificial': '**Inteligência Artificial** é a capacidade de máquinas realizarem tarefas que normalmente requerem inteligência humana. Inclui: aprendizado de máquina, processamento de linguagem natural, visão computacional e sistemas de raciocínio lógico.',
+  'dicas para estudar': '**Dicas para Estudar:**\n\n1. **Técnica Pomodoro**: 25min estudando + 5min pausa\n2. **Active Recall**: Teste-se regularmente\n3. **Elaboração**: Explique conceitos em suas palavras\n4. **Espaçamento**: Revise material em intervalos crescentes\n5. **Ambiente**: Local quieto, sem distrações\n6. **Grupos**: Estude com colegas\n\nEstude com consistência, não intensidade!',
+  'como funciona machine learning': '**Machine Learning** é uma subárea da IA onde modelos aprendem com dados:\n\n1. **Supervisionado**: Treinamento com dados rotulados (regressão, classificação)\n2. **Não-supervisionado**: Descobrir padrões em dados não-rotulados (clustering)\n3. **Reforço**: Agente aprende através de recompensas\n\nFases: Coleta → Pré-processamento → Treinamento → Validação → Deploy',
+  'default': 'Desculpe, o servidor Gemma está inacessível 😔\n\n**Modo Offline Ativo**: Suas ferramentas (agenda, tarefas, etc) funcionam normalmente!\n\nPara perguntas sobre o conteúdo, tente:\n• "o que é inteligência artificial"\n• "dicas para estudar"\n• "como funciona machine learning"\n\nOu verifique a conexão com llm.liaufms.org no painel Logs com 🧪'
+};
 
 // ── STATE ─────────────────────────────────────────────────────────────────
 const state = {
@@ -753,6 +811,24 @@ Forneça exemplos práticos e casos de uso do material acadêmico.`;
     { role:'user', content: userContent }
   ];
 
+  // Modo Offline: Retorna respostas mock se estiver ativo
+  if (OFFLINE_MODE) {
+    console.log('📴 MODO OFFLINE: Usando respostas pré-configuradas');
+    const msg = userMessage.toLowerCase();
+    let mockResponse = mockResponses.default;
+    
+    for (const [key, value] of Object.entries(mockResponses)) {
+      if (key !== 'default' && msg.includes(key)) {
+        mockResponse = value;
+        break;
+      }
+    }
+    
+    state.chatHistory.push({ role:'user', content:userMessage });
+    state.chatHistory.push({ role:'assistant', content:mockResponse });
+    return mockResponse;
+  }
+
   console.log('📡 Enviando requisição para Gemma:', { url: API_URL, model: MODEL, mensagens: messages.length });
 
   try {
@@ -795,7 +871,7 @@ Forneça exemplos práticos e casos de uso do material acadêmico.`;
     if (error.name === 'AbortError') {
       errorMsg = '⏱️ Timeout: A requisição levou mais de 30 segundos.\n\nTente:\n1. Verificar conexão de internet\n2. O servidor pode estar lento\n3. Tente novamente em alguns segundos';
     } else if (error.message.includes('Failed to fetch')) {
-      errorMsg = '🌐 Erro de Rede: Não conseguiu conectar ao servidor.\n\nPossíveis causas:\n1. Servidor https://llm.liaufms.org está offline\n2. Firewall/VPN bloqueando a requisição\n3. Problema de DNS\n\nAbra DevTools (F12 → Console) para mais detalhes';
+      errorMsg = '🌐 Erro de Rede: Não conseguiu conectar ao servidor.\n\n**Possíveis soluções:**\n1. Ativar "Modo Offline" (painel ⚙️ Configurações)\n2. Verificar https://llm.liaufms.org\n3. Usar Ollama local ou outro servidor\n\nAbra DevTools (F12 → Console) para mais detalhes';
     } else if (error.message.includes('NetworkError')) {
       errorMsg = '🌐 Erro de Conectividade: Verifique sua conexão de internet';
     } else {
@@ -885,7 +961,7 @@ function scroll() { const msgs = document.getElementById('chatMessages'); msgs.s
 
 // ── NAVEGAÇÃO ─────────────────────────────────────────────────────────────
 function showPanel(name) {
-  ['chat','agenda','tasks','rag','logs'].forEach(p => {
+  ['chat','agenda','tasks','rag','logs','settings'].forEach(p => {
     document.getElementById(`panel-${p}`).classList.toggle('panel-hidden', p !== name);
     document.getElementById(`nb-${p}`).classList.toggle('active', p === name);
   });
@@ -893,6 +969,7 @@ function showPanel(name) {
   if (name === 'tasks')  renderTasks();
   if (name === 'rag')    renderRAG();
   if (name === 'logs')   renderLogs();
+  if (name === 'settings') loadApiConfig();
 }
 
 // ── RENDERIZAÇÕES ─────────────────────────────────────────────────────────
@@ -950,10 +1027,19 @@ async function testarAPI() {
   
   console.log('🧪 Iniciando teste de API:', { url: API_URL, model: MODEL });
   
+  // Primeiro: Testar se consegue alcançar o domínio
+  try {
+    const headTest = await fetch(API_URL.split('/v1/')[0], { method: 'HEAD' });
+    console.log('📍 Teste HEAD ao domínio:', headTest.status);
+  } catch (e) {
+    console.log('❌ Domínio inacessível:', e.message);
+  }
+  
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
+    console.log('📤 Enviando POST para:', API_URL);
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
@@ -970,10 +1056,12 @@ async function testarAPI() {
 
     clearTimeout(timeoutId);
 
+    console.log('📥 Resposta HTTP:', response.status, response.statusText);
+
     if (response.ok) {
       const data = await response.json();
       const text = data.choices?.[0]?.message?.content || 'Sem resposta';
-      resultDiv.innerHTML = `✅ <strong>API Funcional!</strong><br>Status: ${response.status}<br>Resposta: ${text.substring(0, 100)}`;
+      resultDiv.innerHTML = `✅ <strong>API Funcional!</strong><br>Status: ${response.status}<br>Resposta: "${text.substring(0, 100)}"`;
       resultDiv.style.color = '#10b981';
       console.log('✅ API test passed:', text);
     } else {
@@ -991,15 +1079,15 @@ async function testarAPI() {
       resultDiv.style.color = '#ef4444';
     }
   } catch(error) {
-    console.error('❌ Erro no teste de API:', error.name, error.message);
+    console.error('❌ Erro no teste de API:', error.name, error.message, error.stack);
     
     let mensagem = '';
     if (error.name === 'AbortError') {
       mensagem = '⏱️ Timeout na conexão (15s)\n\n1. Servidor pode estar muito lento\n2. Rede instável\n3. Tente novamente em alguns segundos';
     } else if (error.message.includes('Failed to fetch')) {
-      mensagem = '🌐 Erro de Rede - Servidor inacessível\n\n1. https://llm.liaufms.org offline?\n2. Firewall/proxy bloqueando?\n3. DNS resolvendo incorretamente?';
+      mensagem = '🌐 Erro de Rede "Failed to fetch"\n\nIsto pode significar:\n1. CORS bloqueado (servidor não aceita requisições frontend)\n2. Servidor offline ou inacessível\n3. Firewall/proxy/VPN bloqueando\n\nTente:\n- Desativar VPN/proxy\n- Verificar https://llm.liaufms.org no navegador\n- Contacte seu professor';
     } else {
-      mensagem = `Erro: ${error.message}`;
+      mensagem = `❌ ${error.name}: ${error.message}`;
     }
     
     resultDiv.innerHTML = `❌ <strong>Erro de Conexão</strong><br>${mensagem}`;
@@ -1038,8 +1126,73 @@ function renderLogs() {
     </div>`).join('') || '<span style="font-size:12px;color:var(--text3)">Nenhuma ferramenta chamada ainda. Use o chat!</span>';
 }
 
+// ── FUNÇÕES DE CONFIGURAÇÃO ─────────────────────────────────────────────
+function toggleOfflineMode() {
+  OFFLINE_MODE = document.getElementById('offlineMode').checked;
+  localStorage.setItem('jarvis_offline_mode', OFFLINE_MODE);
+  const status = OFFLINE_MODE ? '📴 ATIVADO' : '📡 DESATIVADO';
+  const style = OFFLINE_MODE ? 'color: #f59e0b;' : 'color: #10b981;';
+  console.log(`%cModo Offline ${status}`, style);
+}
+
+function toggleApiKeyVisibility() {
+  const input = document.getElementById('apiKey');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function saveApiConfig() {
+  const newUrl = document.getElementById('apiUrl').value.trim();
+  const newKey = document.getElementById('apiKey').value.trim();
+  const newModel = document.getElementById('modelName').value.trim();
+  
+  if (newUrl) { API_URL = newUrl; localStorage.setItem('jarvis_api_url', newUrl); console.log('✅ URL salva:', newUrl); }
+  if (newKey) { API_KEY = newKey; localStorage.setItem('jarvis_api_key', newKey); console.log('✅ API Key salva'); }
+  if (newModel) { MODEL = newModel; localStorage.setItem('jarvis_model', newModel); console.log('✅ Modelo salvo:', newModel); }
+  
+  alert('⚙️ Configurações salvas com sucesso!');
+  loadApiConfig();
+}
+
+function loadApiConfig() {
+  document.getElementById('offlineMode').checked = OFFLINE_MODE;
+  document.getElementById('apiUrl').value = API_URL;
+  document.getElementById('apiKey').value = API_KEY.substring(0, 10) + '***';
+  document.getElementById('modelName').value = MODEL;
+}
+
+function setApiPreset(preset) {
+  if (preset === 'ollama') {
+    document.getElementById('apiUrl').value = 'http://localhost:11434/v1/chat/completions';
+    document.getElementById('modelName').value = 'llama2';
+    alert('⚙️ Preset Ollama carregado!\n\nCertifique-se de que Ollama está rodando:\nollama serve');
+  } else if (preset === 'openai') {
+    document.getElementById('apiUrl').value = 'https://api.openai.com/v1/chat/completions';
+    document.getElementById('modelName').value = 'gpt-3.5-turbo';
+    alert('⚙️ Preset OpenAI carregado!\n\nConfigure sua API Key e clique em "Salvar Key"');
+  }
+}
+
+function resetApiConfig() {
+  if (confirm('⚠️ Restaurar configurações padrão?\n\nIsso vai resetar para Gemma do professor.')) {
+    localStorage.removeItem('jarvis_api_url');
+    localStorage.removeItem('jarvis_api_key');
+    localStorage.removeItem('jarvis_model');
+    localStorage.removeItem('jarvis_offline_mode');
+    
+    API_URL = 'https://llm.liaufms.org/v1/gemma-3-12b-it/chat/completions';
+    API_KEY = 'Cxt2ftLF7d3mHS2JdiFqB-eSDAQeZvFATPXPs02lV9A';
+    MODEL = 'google/gemma-3-12b-it';
+    OFFLINE_MODE = false;
+    
+    loadApiConfig();
+    console.log('✅ Configurações restauradas ao padrão');
+    alert('✅ Restaurado ao padrão!');
+  }
+}
+
 // init
 renderTasks();
+loadApiConfig();
 </script>
 </body>
 </html>
