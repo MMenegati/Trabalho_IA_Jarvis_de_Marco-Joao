@@ -1,0 +1,19 @@
+# Dependências Node.js
+node_modules/
+package-lock.json
+npm-debug.log
+yarn-error.log
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Variáveis de ambiente
+.env
+.env.local
+
+# Cache
+.cache/
+*.log

@@ -1,0 +1,13 @@
+{
+  "name": "jarvis-proxy",
+  "version": "1.0.0",
+  "description": "CORS proxy for JARVIS Academic",
+  "main": "proxy.js",
+  "scripts": {
+    "start": "node proxy.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
