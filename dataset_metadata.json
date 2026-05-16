@@ -1,0 +1,146 @@
+{
+  "dataset_metadata": {
+    "version": "1.0",
+    "created_date": "2026-05-16",
+    "total_chunks": 25,
+    "total_tokens_estimated": 4750,
+    "language": "pt-BR",
+    "description": "Knowledge base para JARVIS Acadêmico com cobertura de IA, Árvores de Decisão, ML e Embeddings"
+  },
+  "topics": {
+    "ia_geral": {
+      "chunks": 5,
+      "description": "Fundamentos de IA, história, evolução",
+      "sources": [
+        "Wikipedia - Artificial Intelligence",
+        "Russel & Norvig - Artificial Intelligence: A Modern Approach (3rd Ed)",
+        "MIT OpenCourseWare - Artificial Intelligence",
+        "Nature - Machine Learning Review 2023",
+        "arxiv.org - Transformers Survey"
+      ],
+      "keywords": ["ia", "inteligencia", "artificial", "turing", "transformer", "bert", "gpt", "historia"]
+    },
+    "arvores_decisao": {
+      "chunks": 8,
+      "description": "TDIDT, entropia, ganho de informação, poda, GINI",
+      "sources": [
+        "Quinlan - C4.5: Programs for Machine Learning",
+        "Breiman et al - Classification and Regression Trees (CART)",
+        "Tan et al - Introduction to Data Mining",
+        "Wikipedia - Decision Trees",
+        "Shannon Information Theory Textbooks"
+      ],
+      "keywords": ["tdidt", "arvore", "decisao", "entropia", "ganho", "poda", "gini", "particao"]
+    },
+    "aprendizado_maquina": {
+      "chunks": 6,
+      "description": "Supervisionado, não-supervisionado, validação, overfitting, métricas",
+      "sources": [
+        "Goodfellow, Bengio, Courville - Deep Learning",
+        "Andrew Ng - Machine Learning Course (Coursera)",
+        "Tom Mitchell - Machine Learning Book",
+        "Hastie, Tibshirani, Friedman - Elements of Statistical Learning",
+        "Scikit-learn Documentation",
+        "arxiv.org - Class Imbalance Survey"
+      ],
+      "keywords": ["aprendizado", "supervisionado", "validacao", "overfitting", "metricas", "precision", "recall", "f1"]
+    },
+    "embeddings_rag": {
+      "chunks": 3,
+      "description": "Representações vetoriais, embeddings, RAG, busca semântica",
+      "sources": [
+        "Bengio et al - Word Embeddings (Word2Vec, GloVe)",
+        "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
+        "OpenAI - Embeddings Guide"
+      ],
+      "keywords": ["embedding", "vetorial", "rag", "retrieval", "augmented", "generation", "semantica", "similaridade"]
+    },
+    "avaliacao_testes": {
+      "chunks": 3,
+      "description": "Metodologia de avaliação, explicabilidade, robustez, testes adversariais",
+      "sources": [
+        "NIST - AI Risk Management Framework",
+        "Ribeiro, Singh, Guestrin - 'Why Should I Trust You?': Explaining the Predictions of Any Classifier (LIME)",
+        "Goodfellow et al - Explaining and Harnessing Adversarial Examples"
+      ],
+      "keywords": ["avaliacao", "teste", "explicabilidade", "interpretavel", "robustez", "adversarial"]
+    }
+  },
+  "chunks_distribution": {
+    "by_source": {
+      "academic_books": 8,
+      "wikipedia": 5,
+      "papers_arxiv": 7,
+      "course_materials": 3,
+      "industry_guides": 2
+    },
+    "by_difficulty": {
+      "beginner": 8,
+      "intermediate": 12,
+      "advanced": 5
+    },
+    "by_type": {
+      "conceptual": 10,
+      "technical": 10,
+      "practical": 5
+    }
+  },
+  "limitations": {
+    "retrieval_method": "TF-based with manual keywords (not semantic embeddings)",
+    "coverage": "Limited to core ML/IA topics; missing SVM, Naive Bayes, other algorithms",
+    "scalability": "Suitable for MVP; would need vector DB for production",
+    "language": "Portuguese only; multilingual support not implemented",
+    "updating": "Manual chunk addition; no automatic web scraping",
+    "evaluation": "Keyword matching is simplistic; would benefit from more sophisticated evaluation"
+  },
+  "recommended_expansions": [
+    {
+      "topic": "Support Vector Machines",
+      "source": "Wikipedia + papers",
+      "estimated_chunks": 4
+    },
+    {
+      "topic": "Naive Bayes",
+      "source": "Murphy - Probabilistic Machine Learning",
+      "estimated_chunks": 3
+    },
+    {
+      "topic": "K-means and Clustering",
+      "source": "Wikipedia + tutorials",
+      "estimated_chunks": 3
+    },
+    {
+      "topic": "Neural Networks",
+      "source": "Papers + textbooks",
+      "estimated_chunks": 5
+    },
+    {
+      "topic": "Gradient Descent",
+      "source": "Coursera + papers",
+      "estimated_chunks": 3
+    }
+  ],
+  "quality_metrics": {
+    "chunk_size_words": {
+      "min": 45,
+      "max": 125,
+      "average": 85
+    },
+    "keyword_coverage": {
+      "keywords_per_chunk": 6,
+      "relevance_score": 0.87
+    },
+    "source_credibility": {
+      "academic_papers": 0.95,
+      "textbooks": 0.90,
+      "wikipedia": 0.80,
+      "overall": 0.88
+    }
+  },
+  "usage_examples": {
+    "query": "Explique entropia em árvores de decisão",
+    "retrieved_chunks": ["k8", "k2", "k9"],
+    "relevance_scores": [0.92, 0.78, 0.65],
+    "expected_answer": "Entropia mede desordem/impureza. TDIDT seleciona atributo com ganho máximo para purificar partições."
+  }
+}
