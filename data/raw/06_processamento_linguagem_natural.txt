@@ -1,0 +1,16 @@
+Fonte: Jurafsky & Martin - Speech and Language Processing (3rd Ed); Manning & Schütze - Foundations of Statistical NLP; Devlin et al - BERT Paper
+Titulo: Processamento de Linguagem Natural (PLN)
+
+Processamento de Linguagem Natural (PLN ou NLP) é a área da IA que trata da interação entre computadores e linguagem humana. O objetivo é habilitar máquinas a compreender, interpretar e gerar texto de forma significativa. Tarefas clássicas incluem: tokenização, análise morfológica e sintática, reconhecimento de entidades nomeadas (NER), análise de sentimentos, tradução automática e sumarização.
+
+Tokenização é o processo de dividir texto em unidades mínimas (tokens): palavras, subpalavras ou caracteres. Tokenizadores modernos como BPE (Byte Pair Encoding) e WordPiece dividem palavras raras em subpalavras frequentes, equilibrando vocabulário e cobertura. O vocabulário do BERT tem ~30.000 tokens e o do GPT-4 tem ~100.000 tokens.
+
+Modelos de Linguagem atribuem probabilidades a sequências de texto. N-gramas calculam P(w|contexto) a partir de frequências no corpus. Modelos neurais (RNN, LSTM, Transformer) aprendem representações distribuídas mais ricas. Modelos de linguagem autogressivos como GPT geram texto prevendo o próximo token dado os anteriores. Modelos de linguagem mascarados como BERT preveem tokens mascarados bidireccionalmente.
+
+Análise de Sentimentos classifica opiniões em positivas, negativas ou neutras. Análise Léxica usa dicionários de sentimento (SentiWordNet, VADER). Abordagens de ML e Deep Learning aprendem padrões diretamente dos dados, superando a abordagem léxica em domínios específicos. Análise de Sentimentos de Aspecto identifica a polaridade para aspectos específicos (ex: "o serviço foi ruim, mas a comida estava ótima").
+
+Named Entity Recognition (NER) identifica e classifica entidades em texto: pessoas, organizações, locais, datas, valores monetários. Modelos baseados em CRF (Conditional Random Fields) modelam dependências entre labels adjacentes. Modelos modernos usando BERT ou SpaCy atingem F1 > 90% em benchmarks padrão.
+
+Tradução Automática Neural (NMT) usa arquitetura encoder-decoder com atenção. O encoder lê a sentença fonte e o decoder gera a tradução token a token, usando atenção para focar nas partes relevantes da entrada. Modelos Transformer substituíram LSTM em NMT com melhora significativa de qualidade. BLEU (Bilingual Evaluation Understudy) é a métrica padrão para avaliação de tradução.
+
+Sumarização Automática pode ser extrativa (seleciona sentenças importantes do texto original) ou abstrativa (gera novo texto parafraseando e condensando). TextRank aplica o algoritmo PageRank em grafos de sentenças para sumarização extrativa. Modelos como BART e T5 realizam sumarização abstrativa de alta qualidade com fine-tuning em datasets específicos.

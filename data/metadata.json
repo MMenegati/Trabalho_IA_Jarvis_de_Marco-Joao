@@ -1,0 +1,84 @@
+{
+  "dataset": "JARVIS Acadêmico - Base de Conhecimento em IA",
+  "versao": "1.0",
+  "total_documentos": 10,
+  "documentos": [
+    {
+      "arquivo": "01_ia_fundamentos.txt",
+      "titulo": "Inteligência Artificial - Fundamentos e Evolução Histórica",
+      "fontes": ["Wikipedia - AI", "Russel & Norvig (3rd Ed)", "MIT OpenCourseWare"],
+      "topicos": ["IA", "Turing", "Sistemas Especialistas", "Deep Learning", "LLM"],
+      "limitacoes": "Cobertura histórica, pode não refletir avanços pós-2024"
+    },
+    {
+      "arquivo": "02_arvores_decisao.txt",
+      "titulo": "Árvores de Decisão - Algoritmo TDIDT e Variantes",
+      "fontes": ["Quinlan C4.5", "Breiman CART", "Tan et al - Data Mining", "Shannon"],
+      "topicos": ["TDIDT", "Entropia", "Ganho", "Poda", "GINI", "Overfitting"],
+      "limitacoes": "Foco em árvores clássicas; não cobre Gradient Boosting (XGBoost)"
+    },
+    {
+      "arquivo": "03_aprendizado_maquina.txt",
+      "titulo": "Aprendizado de Máquina - Paradigmas e Técnicas",
+      "fontes": ["Goodfellow et al", "Andrew Ng Coursera", "Tom Mitchell", "Hastie et al"],
+      "topicos": ["Supervisionado", "Validação", "Bias-Variance", "Métricas", "SMOTE"],
+      "limitacoes": "Não cobre AutoML e Neural Architecture Search"
+    },
+    {
+      "arquivo": "04_embeddings_rag.txt",
+      "titulo": "Embeddings e Retrieval-Augmented Generation",
+      "fontes": ["Bengio Word2Vec", "Sentence-BERT", "Lewis et al RAG", "OpenAI"],
+      "topicos": ["Word2Vec", "BERT", "Similaridade Cosseno", "RAG", "Chunking"],
+      "limitacoes": "Bancos vetoriais cobertos superficialmente"
+    },
+    {
+      "arquivo": "05_redes_neurais.txt",
+      "titulo": "Redes Neurais Artificiais e Deep Learning",
+      "fontes": ["LeCun Bengio Hinton", "Goodfellow Deep Learning", "He ResNet", "Vaswani Transformer"],
+      "topicos": ["Backpropagation", "CNN", "RNN", "LSTM", "Transformer", "Transfer Learning"],
+      "limitacoes": "Não cobre modelos de difusão em profundidade"
+    },
+    {
+      "arquivo": "06_processamento_linguagem_natural.txt",
+      "titulo": "Processamento de Linguagem Natural",
+      "fontes": ["Jurafsky & Martin", "Manning & Schütze", "Devlin BERT"],
+      "topicos": ["Tokenização", "NER", "Sentimento", "Tradução", "Sumarização"],
+      "limitacoes": "Foco em técnicas estabelecidas; LLMs cobertos brevemente"
+    },
+    {
+      "arquivo": "07_algoritmos_busca.txt",
+      "titulo": "Algoritmos de Busca e Otimização",
+      "fontes": ["Russel & Norvig", "Cormen et al", "Hart A*"],
+      "topicos": ["BFS", "DFS", "A*", "Algoritmos Genéticos", "Minimax"],
+      "limitacoes": "Não cobre busca quântica ou otimização bayesiana"
+    },
+    {
+      "arquivo": "08_avaliacao_sistemas_ia.txt",
+      "titulo": "Avaliação, Explicabilidade e Robustez de IA",
+      "fontes": ["NIST AI RMF", "LIME", "SHAP", "Goodfellow Adversarial"],
+      "topicos": ["XAI", "LIME", "SHAP", "Fairness", "Data Drift", "Model Cards"],
+      "limitacoes": "Métricas de LLMs (BLEU, ROUGE) não cobertas"
+    },
+    {
+      "arquivo": "09_visao_computacional.txt",
+      "titulo": "Visão Computacional - Técnicas e Aplicações",
+      "fontes": ["Szeliski", "LeCun CNN", "He ResNet", "Redmon YOLO"],
+      "topicos": ["CNN", "Detecção", "Segmentação", "GANs", "Diffusion Models"],
+      "limitacoes": "Foco em imagens estáticas; vídeo e 3D não aprofundados"
+    },
+    {
+      "arquivo": "10_etica_ia.txt",
+      "titulo": "Ética em IA e IA Responsável",
+      "fontes": ["Floridi et al", "Jobin et al", "Bender et al"],
+      "topicos": ["Bias", "Fairness", "Privacidade", "LGPD", "Deepfakes", "LAWS"],
+      "limitacoes": "Campo em rápida evolução; regulamentações podem ter mudado"
+    }
+  ],
+  "chunking": {
+    "estrategia": "Sliding Window",
+    "tamanho_chunk": 200,
+    "overlap": 50,
+    "unidade": "palavras",
+    "impacto_rag": "Overlap de 50 palavras preserva contexto entre chunks adjacentes. Tamanho de 200 palavras equilibra granularidade e contexto suficiente para resposta completa."
+  }
+}

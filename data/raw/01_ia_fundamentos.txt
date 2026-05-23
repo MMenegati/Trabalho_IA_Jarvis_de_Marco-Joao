@@ -1,0 +1,14 @@
+Fonte: Wikipedia - Artificial Intelligence; Russel & Norvig - AI: A Modern Approach (3rd Ed); MIT OpenCourseWare
+Titulo: Inteligência Artificial - Fundamentos e Evolução Histórica
+
+Inteligência Artificial é a ciência que busca construir máquinas e programas capazes de pensar ou agir com características humanas e racionais. O campo foi formalmente iniciado na Conferência de Dartmouth em 1956, quando o termo foi cunhado por John McCarthy. O Teste de Turing (1950) propõe que uma máquina pode ser considerada inteligente se, em uma conversa por texto, não puder ser distinguida de um humano por um avaliador.
+
+A IA simbólica, dominante nas décadas de 1960 e 1970, representava o conhecimento por meio de regras lógicas e símbolos manipuláveis. Entre 1956 e 1974, houve forte otimismo sobre o potencial da IA, seguido de períodos de frustração chamados de Invernos da IA, nos quais financiamentos foram cortados. Os Sistemas Especialistas dos anos 1980 trouxeram novo ciclo de sucesso ao codificar o conhecimento de especialistas humanos em bases de regras.
+
+Aprendizado por Indução é o pilar do Aprendizado de Máquina, onde princípios gerais e hipóteses são elaborados a partir da observação repetida de dados e exemplos. O sistema generaliza a partir dos exemplos para realizar predições sobre dados não vistos anteriormente. Este paradigma substituiu gradualmente a abordagem simbólica clássica por volta dos anos 1990.
+
+A distinção entre abordagens simbólicas e conexionistas é central em IA. Algoritmos simbólicos como Árvores de Decisão produzem resultados interpretáveis e transparentes. Modelos conexionistas baseados em redes neurais, especialmente o Deep Learning, comportam-se como caixas pretas, gerando preocupações quanto à explicabilidade e comportamentos anômalos.
+
+A evolução recente passou pelas Redes Neurais Convolucionais (CNNs) para visão computacional e pela arquitetura Transformer para Processamento de Linguagem Natural (PLN). Grandes Modelos de Linguagem (LLMs) como BERT e GPT demonstraram capacidades emergentes não previstas, incluindo raciocínio lógico e geração de código. Esses modelos avançados começam a demonstrar riscos envolvendo tomada de decisão autônoma e viés algorítmico.
+
+As principais abordagens em IA incluem: (1) Agentes Racionais, que maximizam uma função de utilidade; (2) Sistemas Baseados em Conhecimento, que usam bases de fatos e regras; (3) Aprendizado de Máquina, que infere padrões a partir de dados; (4) Computação Evolutiva, que usa mecanismos inspirados na biologia. A escolha da abordagem depende do problema: problemas com espaço de estados bem definido beneficiam-se de busca heurística, enquanto problemas com dados abundantes beneficiam-se de aprendizado estatístico.

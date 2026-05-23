@@ -17,3 +17,16 @@ Thumbs.db
 # Cache
 .cache/
 *.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# SQLite (gerado automaticamente)
+storage/*.db
+
+# RAG cache (gerado automaticamente)
+data/chunks.json

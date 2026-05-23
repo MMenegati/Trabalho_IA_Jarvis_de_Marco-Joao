@@ -1,0 +1,16 @@
+Fonte: Floridi et al - Ethics Guidelines for Trustworthy AI; Jobin et al - Global Landscape of AI Ethics; Bender et al - Stochastic Parrots
+Titulo: Ética em Inteligência Artificial e IA Responsável
+
+A ética em IA trata dos princípios morais que devem guiar o desenvolvimento, implantação e uso de sistemas de IA. Os princípios fundamentais identificados em consenso global incluem: Beneficência (fazer o bem, maximizar benefícios), Não-Maleficência (não causar dano, mitigar riscos), Autonomia (respeitar a tomada de decisão humana), Justiça (distribuição equitativa de benefícios e ônus) e Explicabilidade (transparência sobre decisões automatizadas).
+
+Viés Algorítmico (Algorithmic Bias) ocorre quando sistemas de IA produzem resultados sistematicamente preconceituosos contra grupos protegidos (gênero, raça, religião, etc.). Fontes de viés incluem: dados de treino que refletem discriminações históricas (ex: sistemas de reconhecimento facial com maior erro para pele escura), viés de seleção (dados que não representam a população alvo), e viés de confirmação no design do sistema. O caso COMPAS demonstrou que algoritmos de reincidência criminal exibiram bias racial sistemático.
+
+Privacidade e Proteção de Dados são fundamentais na era da IA. Sistemas de ML frequentemente processam dados pessoais sensíveis. A LGPD (Lei Geral de Proteção de Dados) no Brasil e o GDPR na Europa impõem obrigações sobre coleta, uso e retenção de dados. Técnicas de privacidade diferencial adicionam ruído calibrado para proteger indivíduos em datasets agregados. Federated Learning treina modelos sem centralizar dados sensíveis.
+
+Desinformação e Deepfakes são desafios crescentes. Modelos generativos permitem criar imagens, áudios e vídeos falsos convincentes de pessoas reais. Deepfakes ameaçam a integridade de evidências e podem ser usados para manipulação política ou difamação. Técnicas de detecção (classificadores de deepfake) disputam uma corrida armamentista com técnicas de geração.
+
+Automação e Impacto no Trabalho: IA e robótica podem automatizar tarefas cognitivas e físicas rotineiras, deslocando trabalhadores de certas funções. Estimativas variam sobre a extensão do impacto. Historicamente, automações criaram novas categorias de emprego, mas a transição pode ser dolorosa para grupos específicos. Políticas de requalificação (reskilling) e renda básica universal são debatidas como respostas.
+
+Sistemas Autônomos de Armas (LAWS - Lethal Autonomous Weapon Systems) levantam questões éticas sobre delegação de decisões letais a máquinas. A Convenção sobre Certas Armas Convencionais da ONU debate regulamentação. O argumento contra LAWS inclui: impossibilidade de atribuição de responsabilidade legal, incapacidade de aplicar direito humanitário internacional e risco de proliferação.
+
+IA Responsável (Responsible AI) engloba práticas para desenvolver IA de forma ética: documentação (Model Cards, Datasheets), auditorias de terceiros, diversidade nas equipes de desenvolvimento, testes de impacto antes de implantação, mecanismos de contestação para indivíduos afetados, e supervisão humana significativa (human-in-the-loop). Organizações como IEEE, ACM e governos publicam diretrizes de IA responsável.
