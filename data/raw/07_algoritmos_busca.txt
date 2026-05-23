@@ -1,0 +1,16 @@
+Fonte: Russel & Norvig - AI: A Modern Approach; Cormen et al - Introduction to Algorithms; Hart et al - A* Paper (1968)
+Titulo: Algoritmos de Busca e Otimização em IA
+
+Busca é uma técnica fundamental em IA para encontrar soluções em espaços de estados. Um problema de busca é definido por: estado inicial, operadores (ações), função de teste de objetivo e função de custo de caminho. A solução é uma sequência de ações do estado inicial ao objetivo. A eficiência é medida por completude (garante encontrar solução), otimalidade (garante solução de menor custo), complexidade de tempo e complexidade de espaço.
+
+Busca em Largura (BFS) explora todos os nós de uma profundidade antes de avançar. É completa e ótima (para custos uniformes), mas tem complexidade de memória exponencial O(b^d). Busca em Profundidade (DFS) explora um caminho até o fim antes de retroceder. Usa memória O(bm) mas pode não terminar em espaços infinitos. Busca de Aprofundamento Iterativo (IDDFS) combina as vantagens de ambas.
+
+Busca A* usa uma heurística h(n) para estimar o custo do nó n ao objetivo, combinando com o custo g(n) do início até n: f(n) = g(n) + h(n). É completa e ótima quando a heurística é admissível (nunca superestima o custo real). Heurísticas comuns: distância de Manhattan para grades, distância euclidiana para espaços contínuos. A qualidade da heurística determina a eficiência: heurística mais informada expande menos nós.
+
+Algoritmos Genéticos são metaheurísticas inspiradas na evolução natural para otimização. Mantém uma população de soluções candidatas, aplica seleção (sobrevivência dos mais aptos), cruzamento (recombinação de soluções), e mutação (perturbação aleatória). São eficazes para espaços de busca grandes e não-diferenciáveis. Parâmetros críticos: tamanho da população, taxa de mutação, operadores de cruzamento.
+
+Simulated Annealing é uma metaheurística que aceita soluções piores com probabilidade decrescente ao longo do tempo (analogia ao resfriamento do metal). Permite escapar de ótimos locais. A temperatura T controla a probabilidade de aceitar pioras: P(aceitar) = e^(-ΔE/T). Convergência garantida para ótimo global com esquema de resfriamento logarítmico (mas impraticável).
+
+Programação Dinâmica resolve problemas com subestrutura ótima e subproblemas sobrepostos. Memorização evita recomputação de subproblemas. Exemplos clássicos: Fibonacci, Knapsack, Shortest Path (Dijkstra, Bellman-Ford). Em RL (Reinforcement Learning), DP é usada para calcular políticas ótimas quando o modelo do ambiente é conhecido (Policy Iteration, Value Iteration).
+
+Busca em Jogos usa Minimax com poda Alfa-Beta. Minimax assume que o adversário joga otimamente e minimiza o pior caso. Poda Alfa-Beta elimina ramos que não afetam a decisão, reduzindo a complexidade de O(b^d) para O(b^(d/2)). Monte Carlo Tree Search (MCTS) combina busca em árvore com estimativas estatísticas de valor, usado no AlphaGo.

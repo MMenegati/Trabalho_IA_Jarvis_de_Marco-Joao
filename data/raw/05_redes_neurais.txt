@@ -1,0 +1,16 @@
+Fonte: LeCun, Bengio & Hinton - Deep Learning (Nature 2015); Goodfellow et al - Deep Learning Book; He et al - ResNet Paper; Vaswani et al - Attention is All You Need
+Titulo: Redes Neurais Artificiais e Deep Learning
+
+Redes Neurais Artificiais (RNAs) são modelos computacionais inspirados no sistema nervoso biológico. Cada neurônio artificial recebe entradas, aplica pesos e uma função de ativação, e produz uma saída. O Perceptron de Rosenblatt (1957) foi o primeiro modelo. O algoritmo Backpropagation (1986) permitiu treinar redes com múltiplas camadas (multilayer perceptrons) ao propagar o gradiente do erro da saída para os pesos internos.
+
+Funções de ativação introduzem não-linearidade, permitindo que redes aprendam relações complexas. Sigmoid (σ(x) = 1/(1+e^-x)) satura em 0 e 1, sofrendo do problema de vanishing gradient em redes profundas. ReLU (max(0,x)) resolve o vanishing gradient e é computacionalmente eficiente. Variantes como Leaky ReLU e GELU são usadas em modelos modernos. Softmax é usada na camada final para classificação multiclasse.
+
+Redes Neurais Convolucionais (CNNs) são especializadas em dados com estrutura espacial (imagens). Camadas convolucionais aplicam filtros que detectam padrões locais (bordas, texturas). Pooling reduz dimensionalidade preservando features relevantes. Arquiteturas históricas importantes: LeNet (1998), AlexNet (2012, vencedor do ImageNet), VGG, Inception, ResNet (conexões residuais que permitem treinar redes com centenas de camadas).
+
+Redes Recorrentes (RNNs) processam sequências mantendo estado interno (memória). LSTMs (Long Short-Term Memory) e GRUs (Gated Recurrent Units) resolvem o problema de dependências de longo prazo em RNNs simples usando mecanismos de porta (gates). Foram dominantes em PLN até 2017.
+
+A arquitetura Transformer (Vaswani et al, 2017) revolucionou o PLN com o mecanismo de Self-Attention: cada token atende a todos os outros tokens da sequência diretamente, capturando dependências de longo alcance sem recorrência. Permite paralelização no treino. BERT usa apenas o encoder do Transformer para representação; GPT usa apenas o decoder para geração. Modelos de linguagem modernos (ChatGPT, Gemma, Llama) são baseados em Transformers.
+
+Técnicas de regularização em redes neurais incluem: Dropout (zerando aleatoriamente neurônios durante treino para evitar co-adaptação), Batch Normalization (normaliza ativações de cada camada, estabilizando o treino), Weight Decay (penaliza pesos grandes via L2), e Data Augmentation (aumenta artificialmente o dataset com transformações dos dados originais).
+
+Transfer Learning aproveita pesos pré-treinados em tarefas gerais (ex: ImageNet, corpus de texto grande) para tarefas específicas com poucos dados. Fine-tuning ajusta os pesos do modelo pré-treinado para o domínio alvo. Isso reduziu drasticamente a quantidade de dados e computação necessária para atingir bons resultados em tarefas especializadas.

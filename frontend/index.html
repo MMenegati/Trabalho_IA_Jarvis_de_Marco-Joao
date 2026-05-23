@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JARVIS Acadêmico</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Sidebar de navegação -->
+    <nav class="sidebar">
+      <div class="logo">⬡ JARVIS</div>
+      <button class="nav-btn active" data-panel="chat">💬 Chat</button>
+      <button class="nav-btn" data-panel="agenda">📅 Agenda</button>
+      <button class="nav-btn" data-panel="tasks">✅ Tarefas</button>
+      <button class="nav-btn" data-panel="logs">🔍 Logs</button>
+    </nav>
+
+    <!-- Área principal -->
+    <main class="main">
+
+      <!-- Painel: Chat -->
+      <section id="panel-chat" class="panel active">
+        <header class="panel-header">
+          <h1>Assistente JARVIS</h1>
+          <p>RAG + Tool Calling + Gemma 12B</p>
+        </header>
+        <div id="chat-messages" class="chat-messages"></div>
+        <div class="chat-input-area">
+          <textarea id="chat-input" rows="2" placeholder="Pergunte sobre materiais, agenda, tarefas… (Enter para enviar)"></textarea>
+          <button id="chat-send">Enviar</button>
+        </div>
+      </section>
+
+      <!-- Painel: Agenda -->
+      <section id="panel-agenda" class="panel">
+        <header class="panel-header">
+          <h1>Agenda Acadêmica</h1>
+        </header>
+        <div class="filter-bar">
+          <button class="filter-btn active" data-agenda-periodo="hoje">Hoje</button>
+          <button class="filter-btn" data-agenda-periodo="amanha">Amanhã</button>
+          <button class="filter-btn" data-agenda-periodo="semana">Esta Semana</button>
+        </div>
+        <div id="agenda-list" class="item-list"></div>
+      </section>
+
+      <!-- Painel: Tarefas -->
+      <section id="panel-tasks" class="panel">
+        <header class="panel-header">
+          <h1>Lista de Tarefas</h1>
+        </header>
+        <form id="task-form" class="task-form">
+          <input id="task-input" type="text" placeholder="Nova tarefa…" required />
+          <select id="task-priority">
+            <option value="alta">Alta</option>
+            <option value="media" selected>Média</option>
+            <option value="baixa">Baixa</option>
+          </select>
+          <button type="submit">+ Adicionar</button>
+        </form>
+        <div class="filter-bar">
+          <button class="filter-btn active" data-tasks-filtro="pendentes">Pendentes</button>
+          <button class="filter-btn" data-tasks-filtro="concluidas">Concluídas</button>
+        </div>
+        <div id="tasks-list" class="item-list"></div>
+      </section>
+
+      <!-- Painel: Logs de ferramentas -->
+      <section id="panel-logs" class="panel">
+        <header class="panel-header">
+          <h1>Logs de Ferramentas</h1>
+          <p>Registro de cada ferramenta chamada pela LLM</p>
+        </header>
+        <div id="tools-log" class="log-list"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

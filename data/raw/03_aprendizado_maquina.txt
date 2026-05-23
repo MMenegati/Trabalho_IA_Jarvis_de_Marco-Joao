@@ -1,0 +1,16 @@
+Fonte: Goodfellow, Bengio & Courville - Deep Learning; Andrew Ng - Coursera ML; Tom Mitchell - Machine Learning; Hastie, Tibshirani & Friedman - Statistical Learning
+Titulo: Aprendizado de Máquina - Paradigmas, Avaliação e Técnicas
+
+Aprendizado de Máquina (ML) é um subcampo da IA onde sistemas aprendem automaticamente a partir de dados sem serem explicitamente programados para cada tarefa. Os três paradigmas principais são: Supervisionado, onde o modelo aprende a mapear entradas para saídas a partir de exemplos etiquetados (pares entrada-saída); Não-Supervisionado, onde o modelo identifica padrões e estruturas em dados sem rótulos; e por Reforço, onde um agente aprende a tomar decisões por meio de prêmios e punições recebidos ao interagir com um ambiente.
+
+O ciclo de desenvolvimento de um modelo ML envolve: coleta e pré-processamento de dados, seleção e treinamento do modelo, avaliação em dados não vistos, e iteração. A divisão dos dados em conjuntos de treino, validação e teste é fundamental. O conjunto de treino é usado para ajustar parâmetros, o de validação para escolher hiperparâmetros e o de teste para reportar performance final de forma honesta.
+
+Validação Cruzada (k-fold Cross-Validation) divide o dataset em k partições iguais, treina k vezes usando k-1 partições para treino e 1 para validação, e reporta a média das métricas. Esta técnica fornece estimativa robusta de performance e é especialmente útil quando o dataset é pequeno. Leave-One-Out é um caso extremo com k = número de exemplos.
+
+O dilema Bias-Variance é central em ML. Alto bias (underfitting) ocorre quando o modelo é demasiado simples para capturar os padrões dos dados, resultando em alto erro tanto em treino quanto em teste. Alto variance (overfitting) ocorre quando o modelo é complexo demais e memoriza o ruído dos dados de treino, resultando em baixo erro de treino mas alto erro de teste. A solução envolve regularização, mais dados ou modelos com complexidade adequada.
+
+As principais métricas de avaliação para classificação são: Acurácia (proporção de acertos), Precision (VP / VP+FP, proporção de predições positivas corretas), Recall (VP / VP+FN, proporção de positivos reais identificados) e F1-Score (média harmônica de Precision e Recall). A Matriz de Confusão organiza VP, VN, FP e FN para visualização dos erros por classe. Para problemas desbalanceados, Acurácia pode enganar — F1 e AUC-ROC são preferíveis.
+
+Pré-processamento de dados é crítico para performance. Normalização trata dados com escalas diferentes que prejudicam algoritmos baseados em distância (KNN, SVM). Padronização (z-score: x' = (x-μ)/σ) e Min-Max (x' = (x-min)/(max-min)) são as técnicas mais comuns. Seleção de Features remove atributos irrelevantes ou redundantes, reduzindo dimensionalidade e evitando a maldição da dimensionalidade.
+
+Desbalanceamento de Classes ocorre quando uma classe tem muito menos exemplos (ex: 99% negativos em detecção de fraude). Técnicas de mitigação incluem: oversampling da minoria (SMOTE - Synthetic Minority Oversampling Technique), undersampling da maioria, ajuste de pesos de classe nas funções de perda, e mudança do limiar de decisão. Ignorar o desbalanceamento leva a modelos com alta acurácia mas que nunca predizem a classe minoritária.

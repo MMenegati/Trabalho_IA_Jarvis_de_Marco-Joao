@@ -1,0 +1,16 @@
+Fonte: Bengio et al - Word Embeddings; Reimers & Gurevych - Sentence-BERT; Lewis et al - RAG Paper (2020); OpenAI Embeddings Guide
+Titulo: Embeddings e Retrieval-Augmented Generation (RAG)
+
+Embeddings são representações vetoriais densas (low-dimensional) que capturam a semântica de palavras, frases ou documentos em um espaço vetorial contínuo. Palavras semanticamente similares ficam próximas nesse espaço. Word2Vec (2013) popularizou o conceito: o modelo skip-gram prediz palavras de contexto a partir da palavra central, enquanto CBOW faz o inverso. GloVe usa estatísticas globais de coocorrência de palavras. Ambos produzem vetores estáticos que não variam com o contexto.
+
+BERT (Bidirectional Encoder Representations from Transformers) gera embeddings contextuais: a representação de uma palavra muda dependendo do contexto em que aparece. Isso resolve a ambiguidade de polissemia (banco = instituição financeira vs. banco = assento). Modelos baseados em BERT como Sentence-BERT (SBERT) geram embeddings para frases e documentos completos, otimizados para comparação semântica por similaridade cosseno.
+
+Similaridade Cosseno mede o ângulo entre dois vetores: cos(u,v) = (u·v) / (||u|| * ||v||). Valores próximos a 1 indicam alta similaridade semântica; próximos a -1 indicam opostos; próximos a 0 indicam ortogonalidade (sem relação). A similaridade cosseno é preferível à distância euclidiana para textos porque não é afetada pela magnitude dos vetores (frequência de palavras).
+
+RAG (Retrieval-Augmented Generation) combina recuperação de documentos com geração de linguagem natural. O fluxo completo é: (1) Indexação offline: carregar documentos, dividir em chunks, gerar embeddings e armazenar em banco vetorial; (2) Recuperação online: vetorizar a query do usuário, buscar top-k chunks mais similares no banco vetorial; (3) Geração: passar os chunks recuperados como contexto para o LLM gerar resposta fundamentada. RAG permite que LLMs acessem conhecimento atualizado sem re-treinamento.
+
+A estratégia de chunking impacta diretamente a qualidade do RAG. Chunks muito pequenos perdem contexto; chunks muito grandes reduzem precisão da recuperação. Sliding Window com sobreposição (overlap) preserva continuidade entre chunks adjacentes. Chunking semântico (por parágrafos ou seções) tende a ser superior ao chunking por tamanho fixo. O tamanho típico é 100-300 palavras com overlap de 20-50 palavras.
+
+Bancos de dados vetoriais (FAISS, Pinecone, Chroma, Weaviate) armazenam embeddings e permitem busca eficiente por similaridade usando estruturas de indexação aproximada (HNSW, IVF). Para datasets pequenos (<10k chunks), busca exaustiva com numpy é suficiente. Para grande escala, estruturas ANN (Approximate Nearest Neighbors) são necessárias para performance aceitável.
+
+A qualidade do RAG depende de três fatores: (1) Qualidade dos documentos e chunking; (2) Qualidade dos embeddings (semânticos vs. lexicais); (3) Qualidade do LLM na integração dos trechos recuperados. Métricas de avaliação incluem Recall@k (proporção de documentos relevantes nos top-k recuperados) e Faithfulness (se a resposta é fiel aos documentos recuperados).

@@ -1,0 +1,16 @@
+Fonte: Szeliski - Computer Vision; LeCun et al - CNN; He et al - ResNet; Redmon et al - YOLO
+Titulo: Visão Computacional - Técnicas e Aplicações
+
+Visão Computacional é o campo da IA que permite máquinas extrair informação significativa de imagens e vídeos. Tarefas fundamentais incluem: classificação de imagens (atribuir rótulo a toda a imagem), detecção de objetos (localizar e classificar objetos com bounding boxes), segmentação semântica (classificar cada pixel) e segmentação de instâncias (distinguir instâncias individuais do mesmo objeto).
+
+Processamento de imagem clássico usa filtros para extração de features: Filtro Sobel detecta bordas por gradientes de intensidade, Filtro Gaussiano suaviza ruído, Transformada de Hough detecta formas geométricas. Descritores de features locais como SIFT (Scale-Invariant Feature Transform) e HOG (Histogram of Oriented Gradients) foram dominantes antes do Deep Learning.
+
+Redes Neurais Convolucionais revolucionaram visão computacional a partir de 2012. AlexNet venceu o ImageNet Challenge com 15.3% de erro vs. 26.2% do segundo colocado, usando GPUs e ReLU. VGG demonstrou que profundidade importa com filtros 3x3. GoogLeNet/Inception usou módulos paralelos com diferentes tamanhos de filtro. ResNet introduziu conexões residuais (skip connections) permitindo treinar redes com 152+ camadas sem degradação.
+
+Detecção de Objetos evoluiu de sliding window (R-CNN) para detecção em um único passo. R-CNN extrai regiões candidatas e classifica cada uma separadamente (lento). Fast R-CNN e Faster R-CNN melhoraram eficiência. YOLO (You Only Look Once) divide a imagem em grid e prediz bounding boxes e classes em uma única passagem, atingindo detecção em tempo real.
+
+Transferência de Aprendizado em Visão: modelos pré-treinados no ImageNet (1.2M imagens, 1000 classes) servem como extratores de features para tarefas com poucos dados. Fine-tuning das camadas finais ou de toda a rede para o domínio alvo. Feature extraction congela os pesos pré-treinados e treina apenas um classificador no topo. Esta abordagem é eficaz mesmo com centenas de exemplos.
+
+Redes Generativas Adversariais (GANs) aprendem a gerar imagens realistas. O gerador G tenta enganar o discriminador D, e D tenta distinguir imagens reais de geradas. O treinamento alterna entre melhorar G e D. Aplicações: geração de faces realistas (StyleGAN), transferência de estilo, aumento de dados. Diffusion Models (DALL-E, Stable Diffusion) substituíram GANs como estado da arte em geração de imagens.
+
+Segmentação Semântica atribui um rótulo de classe a cada pixel. FCN (Fully Convolutional Networks) substituiu camadas fully-connected por convolucionais para saídas espaciais. U-Net usa skip connections entre encoder e decoder para preservar detalhes espaciais, amplamente usado em imagens médicas. DeepLab usa Atrous Convolution e CRF para bordas precisas.

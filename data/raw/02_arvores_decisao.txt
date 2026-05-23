@@ -1,0 +1,16 @@
+Fonte: Quinlan - C4.5 Algorithm Paper; Breiman et al - CART; Tan, Steinbach & Kumar - Data Mining; Shannon - Information Theory
+Titulo: Árvores de Decisão - Algoritmo TDIDT e Variantes
+
+Árvores de Decisão são modelos de aprendizado supervisionado que representam decisões em estrutura hierárquica de nós. O algoritmo TDIDT (Top-Down Induction of Decision Trees) particiona os dados sucessivamente: nós internos executam testes sobre atributos, ramos representam os resultados dos testes e folhas definem a classificação do objeto. A construção começa com todos os exemplos no nó raiz e divide recursivamente até critério de parada.
+
+A seleção do atributo de divisão é o passo mais crítico. Utiliza-se a Entropia de Shannon para medir o grau de mistura de classes em um conjunto: H(S) = -Σ(p_i * log2(p_i)). O atributo que maximiza o Ganho de Informação (redução de entropia) é escolhido: Ganho(S, A) = H(S) - Σ(|Sv|/|S| * H(Sv)). Um conjunto puro (apenas uma classe) tem entropia zero; um conjunto com classes equiprováveis tem entropia máxima.
+
+A Razão de Ganho (Gain Ratio), introduzida pelo algoritmo C4.5 de Quinlan, penaliza atributos com muitos valores únicos como identificadores. A Razão de Ganho divide o Ganho de Informação pela informação intrínseca do atributo (SplitInfo), balanceando a seleção e evitando subdivisões excessivas de elementos isolados que causam overfitting.
+
+O critério GINI, utilizado no algoritmo CART de Breiman, é alternativa à entropia: G = 1 - Σ(p_i²). Ambos critérios buscam maximizar a homogeneidade (pureza) das partições resultantes. Na prática, entropia e GINI tendem a produzir árvores similares, mas GINI é computacionalmente mais eficiente por evitar o cálculo de logaritmos.
+
+Atributos contínuos (numéricos) são tratados de forma especial: ordenam-se os valores e testam-se pontos de corte Z que maximizem o ganho ao dividir o conjunto em dois subconjuntos. Pré-poda freia o crescimento da árvore precocemente (por profundidade máxima ou mínimo de exemplos por nó), enquanto Pós-poda permite o super-ajuste inicial e depois remove ramos que não melhoram a precisão no conjunto de validação (Reduced Error Pruning).
+
+O fenômeno de overfitting em árvores ocorre quando a árvore memoriza os dados de treino ao invés de generalizar. A pós-poda (reduced error pruning) remove ramos que não melhoram a taxa de acerto no conjunto de validação, reduzindo complexidade sem perder precisão preditiva. Árvores podadas são mais robustas e generalizáveis.
+
+As vantagens das árvores de decisão incluem: interpretabilidade (podem ser lidas como regras SE-ENTÃO), não requerem normalização de dados, capturam interações entre atributos e funcionam bem com dados categóricos. As desvantagens são: instabilidade (pequenas mudanças nos dados causam árvores muito diferentes), tendência a bias para atributos com muitos valores, e dificuldade em capturar relações lineares simples. Florestas Aleatórias (Random Forests) corrigem a instabilidade combinando múltiplas árvores.

@@ -1,0 +1,16 @@
+Fonte: NIST - AI Risk Management Framework; Ribeiro et al - LIME; Lundberg & Lee - SHAP; Goodfellow et al - Adversarial Examples
+Titulo: Avaliação, Explicabilidade e Robustez de Sistemas de IA
+
+A avaliação de sistemas de IA deve ser sistemática e rigorosa. Teste Unitário verifica funções individuais isoladamente. Teste de Integração verifica múltiplos componentes funcionando juntos. Teste de Regressão garante que novas mudanças não quebram funcionalidades existentes. Para sistemas de ML, a avaliação deve incluir performance em distribuições diferentes do treino (shift de distribuição) e casos extremos (edge cases).
+
+Validação de Modelos ML vai além da acurácia em conjunto de teste. Deve incluir: análise de erros por classe, avaliação em dados desbalanceados, performance em subgrupos demográficos (fairness), calibração de probabilidades (um modelo que diz 90% de confiança deve estar certo 90% das vezes), e avaliação de incerteza epistêmica vs. aleatória.
+
+Explicabilidade (XAI - Explainable AI) é crítica para sistemas de alto impacto. LIME (Local Interpretable Model-agnostic Explanations) aproxima o modelo com um modelo linear interpretável localmente em torno de uma predição específica, mostrando quais features mais influenciaram aquela decisão. SHAP (SHapley Additive exPlanations) usa teoria dos jogos para atribuir contribuições de cada feature de forma consistente e eficiente.
+
+Robustez mede a resistência do modelo a perturbações na entrada. Ataques adversariais adicionam perturbações imperceptíveis à entrada que causam erros grosseiros no modelo (ex: uma imagem de panda classificada como gibão com 99% de confiança após adicionar ruído). Testes adversariais revelam fraquezas críticas em sistemas de visão computacional e PLN. Adversarial Training (incluir exemplos adversariais no treino) melhora a robustez.
+
+Fairness (Equidade) em IA avalia se o sistema trata grupos diferentes de forma justa. Métricas incluem: Paridade Demográfica (taxa de predições positivas igual entre grupos), Equalização de Odds (taxas de falso positivo e falso negativo iguais entre grupos), Calibração por Grupo. Disparate Impact mede a razão entre taxas de predições favoráveis em grupos protegidos vs. não-protegidos.
+
+Drift de Dados (Data Drift) ocorre quando a distribuição dos dados em produção difere da distribuição de treino. Covariate Shift: distribuição de features muda mas relação features-label permanece. Concept Drift: a relação entre features e label muda com o tempo (ex: comportamento de fraude evolui). Monitoramento contínuo em produção é essencial para detectar degradação de performance.
+
+Documentação de Modelos (Model Cards) documentam performance, limitações, usos pretendidos e não-pretendidos, dados de treino e avaliação. Folhas de Dados (Datasheets for Datasets) documentam origem, composição, processo de coleta e limitações dos dados. Ambas são práticas essenciais de governança de IA responsável.
