@@ -1,3 +1,17 @@
+TOOL_FALLBACK_PROMPT = """Analise a mensagem do usuário e decida quais ferramentas chamar.
+
+Ferramentas disponíveis:
+{tools}
+
+Mensagem do usuário: "{message}"
+
+Responda APENAS com JSON no formato:
+{{"tools": [{{"name": "nome_da_ferramenta", "args": {{"param": "valor"}}}}]}}
+
+Se nenhuma ferramenta for necessária: {{"tools": []}}
+Não inclua explicações, apenas o JSON."""
+
+
 SYSTEM_PROMPT = """Você é JARVIS, um assistente acadêmico inteligente para estudantes de Ciência da Computação.
 
 Suas responsabilidades:
