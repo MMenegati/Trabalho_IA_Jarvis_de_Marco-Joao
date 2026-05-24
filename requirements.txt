@@ -1,18 +1,9 @@
-# Servidor web
-fastapi>=0.115.0
-uvicorn>=0.30.0
-python-multipart>=0.0.9
-
-# LLM (openai>=1.52 necessário para compatibilidade com httpx>=0.28)
-openai>=1.52.0
-
-# RAG
-scikit-learn>=1.5.0
-numpy>=1.26.0
-PyMuPDF>=1.24.0
-
-# Embeddings BERT (opcional — sistema usa TF-IDF como fallback se torch falhar)
-sentence-transformers>=3.0.0
-
-# Validação
-pydantic>=2.8.0
+fastapi==0.115.0
+uvicorn==0.30.0
+openai==1.40.0
+sentence-transformers==3.0.0
+PyMuPDF==1.24.0
+numpy==1.26.4
+scikit-learn==1.5.0
+pydantic==2.8.0
+python-multipart==0.0.9
