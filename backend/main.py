@@ -53,10 +53,12 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
+    import traceback
     try:
         result = llm_client.chat(req.message, req.history)
         return result
     except Exception as exc:
+        logging.getLogger("jarvis.api").error("Erro no chat: %s\n%s", exc, traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(exc))
 
 

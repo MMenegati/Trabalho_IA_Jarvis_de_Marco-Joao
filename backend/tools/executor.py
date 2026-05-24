@@ -6,6 +6,28 @@ import json
 import logging
 from datetime import datetime
 
+# Mapeamento de aliases que a LLM costuma inventar → nome correto do parâmetro
+_ARG_ALIASES: dict[str, dict[str, str]] = {
+    "listar_tarefas": {
+        "status": "filtro",
+        "tipo": "filtro",
+        "filter": "filtro",
+    },
+    "adicionar_tarefa": {
+        "tarefa": "texto",
+        "task": "texto",
+        "descricao": "texto",
+        "description": "texto",
+        "text": "texto",
+        "titulo": "texto",
+        "priority": "prioridade",
+    },
+    "consultar_agenda": {
+        "period": "periodo",
+        "período": "periodo",
+    },
+}
+
 from backend.tools.agenda import consultar_agenda
 from backend.tools.tasks import listar_tarefas, adicionar_tarefa, concluir_tarefa
 from backend.tools.rag_tool import buscar_material_rag
@@ -36,6 +58,10 @@ def execute(tool_calls) -> list[dict]:
             args = json.loads(call.function.arguments)
         except json.JSONDecodeError:
             args = {}
+
+        # Normaliza aliases de parâmetros que a LLM pode inventar
+        aliases = _ARG_ALIASES.get(name, {})
+        args = {aliases.get(k, k): v for k, v in args.items()}
 
         fn = _REGISTRY.get(name)
         if fn is None:

@@ -1,972 +1,479 @@
-# 📚 JARVIS Acadêmico - Sistema de Assistência Inteligente para Estudos
+# JARVIS Acadêmico
 
-**Versão**: 1.0  
-**Data**: Maio 2026  
-**Modelo**: Gemma 3 12B-IT (Google)  
-**Arquitetura**: RAG + Tool Calling + LLM  
+Assistente inteligente para estudantes de Ciência da Computação, desenvolvido como trabalho prático da disciplina de Inteligência Artificial — UFMS.
 
----
-
-## 📋 Índice
-
-1. [Visão Geral](#visão-geral)
-2. [Arquitetura](#arquitetura)
-3. [Funcionalidades](#funcionalidades)
-4. [Dataset e Conhecimento](#dataset-e-conhecimento)
-5. [Sistema de Avaliação](#sistema-de-avaliação)
-6. [Análise de Erros](#análise-de-erros)
-7. [Como Usar](#como-usar)
-8. [Configuração](#configuração)
-9. [Melhorias Futuras](#melhorias-futuras)
+**Dupla**: Marco Menegati · João Antonow 
+**Modelo**: Gemma 3 12B-IT (`google/gemma-3-12b-it`)  
+**Arquitetura**: RAG + Tool Calling (LLM-driven) + FastAPI + SQLite
 
 ---
 
-## 🎯 Visão Geral
+## Índice
 
-JARVIS Acadêmico é um assistente inteligente baseado em **Retrieval-Augmented Generation (RAG)** e **Tool Calling** para suportar estudantes de Ciência da Computação em:
-
-- 📚 **Consulta a Materiais**: Busca semântica em base de conhecimento com 25+ chunks
-- 📅 **Agenda Acadêmica**: Visualização e consulta a eventos (aulas, provas, trabalhos)
-- ✅ **Gerenciamento de Tarefas**: Adicionar, marcar conclusão, priorizar tarefas
-- 🧠 **Active Recall**: Geração de exercícios e questões para revisão
-- 📊 **Avaliação Systemática**: 10 perguntas de teste com feedback automático
-- 🔍 **Rastreamento**: Logs de todas as ferramentas executadas
+1. [Arquitetura](#arquitetura)
+2. [Funcionalidades implementadas](#funcionalidades-implementadas)
+3. [Como instalar e rodar](#como-instalar-e-rodar)
+4. [Como usar o sistema](#como-usar-o-sistema)
+5. [Dataset](#dataset)
+6. [Tool Calling](#tool-calling)
+7. [Avaliação do sistema](#avaliação-do-sistema)
+8. [Análise de erros](#análise-de-erros)
+9. [Melhorias de aprendizado](#melhorias-de-aprendizado)
+10. [Engenharia de software](#engenharia-de-software)
+11. [IAs utilizadas no desenvolvimento](#ias-utilizadas-no-desenvolvimento)
 
 ---
 
-## 🏗️ Arquitetura
-
-### Componentes Principais
+## Arquitetura
 
 ```
-┌─────────────────────────────────────────────────────┐
-│              INTERFACE (HTML/CSS/JS)                 │
-│  - Chat Panel (5+ painéis navegáveis)                │
-│  - Real-time Rendering (React-like state updates)    │
-└──────────────────┬──────────────────────────────────┘
-                   │
-        ┌──────────┴──────────┐
-        │                     │
-    ┌───▼──────┐      ┌──────▼────────┐
-    │ TOOLS    │      │ LLM (Gemma)    │
-    │ CALLING  │◄────►│ 12B-IT         │
-    └────┬─────┘      └────────────────┘
-         │
-    ┌────▼────────────────────────────┐
-    │  RAG (Retrieval-Augmented Gen)  │
-    │  - Knowledge Base (25 chunks)    │
-    │  - TF-based Retrieval             │
-    └────────────────────────────────┘
+jarvis/
+├── backend/
+│   ├── main.py              ← FastAPI: rotas REST + serve frontend
+│   ├── config.py            ← API key, model, constantes
+│   ├── rag/
+│   │   ├── loader.py        ← lê arquivos de data/raw/
+│   │   ├── chunker.py       ← sliding window (200 palavras, overlap 50)
+│   │   ├── embedder.py      ← BERT (sentence-transformers) ou TF-IDF
+│   │   ├── retriever.py     ← cosine similarity, top-k
+│   │   └── pipeline.py      ← orquestra load→chunk→embed→retrieve
+│   ├── tools/
+│   │   ├── definitions.py   ← schemas JSON das 7 ferramentas (enviados à LLM)
+│   │   ├── agenda.py        ← consultar_agenda
+│   │   ├── tasks.py         ← listar/adicionar/concluir tarefas
+│   │   ├── rag_tool.py      ← buscar_material_rag
+│   │   ├── learning.py      ← gerar_exercicio, planejar_estudos
+│   │   └── executor.py      ← recebe decisão da LLM, executa, loga
+│   ├── llm/
+│   │   ├── client.py        ← ciclo completo: decisão → execução → resposta
+│   │   └── prompts.py       ← system prompt + prompt de roteamento de tools
+│   ├── storage/
+│   │   ├── database.py      ← cria tabelas SQLite + seed inicial
+│   │   ├── agenda_repo.py   ← CRUD de eventos
+│   │   └── tasks_repo.py    ← CRUD de tarefas
+│   └── evaluation/
+│       ├── questions.py     ← 10 perguntas com keywords esperadas
+│       └── scorer.py        ← classifica correta/parcial/incorreta + recupera docs
+├── frontend/
+│   ├── index.html           ← estrutura HTML
+│   ├── css/style.css        ← estilos (tema escuro)
+│   └── js/
+│       ├── api.js           ← todas as chamadas fetch ao backend
+│       ├── app.js           ← estado global + inicialização
+│       ├── chat.js          ← painel de chat
+│       ├── agenda.js        ← painel de agenda
+│       └── tasks.js         ← painel de tarefas
+├── data/
+│   ├── raw/                 ← 10 documentos acadêmicos (.txt)
+│   └── metadata.json        ← origem, tipo, limitações e chunking de cada doc
+├── storage/
+│   └── jarvis.db            ← SQLite (gerado automaticamente)
+├── tests/
+│   ├── test_rag.py
+│   ├── test_tools.py
+│   └── test_evaluation.py
+└── requirements.txt
 ```
 
-### Fluxo de Requisição
-
-1. **Usuário envia mensagem** no chat
-2. **detectTools()** analisa a mensagem com regex + keywords
-3. **Se ferramentas detectadas**:
-   - Executa tool(args) → obtém resultado
-   - Passa resultado para LLM como contexto
-4. **callLLM()** envia para Gemma com:
-   - System prompt (instruções)
-   - Chat history (últimas 6 mensagens)
-   - Tool results (contexto recuperado)
-5. **Gemma responde** naturalmente, integrando dados das tools
-6. **Mensagem é renderizada** e adicionada ao histórico
-
----
-
-## ✨ Funcionalidades
-
-### 1. **Consulta a Materiais (RAG)**
-- **Tool**: `buscar_material_rag(query)`
-- **Método**: TF (Term Frequency) com tokenização + keywords
-- **Base**: 25 chunks documentados com origem (Wikipedia, livros, papers)
-- **Exemplo**: 
-  ```
-  Usuário: "Explique entropia em árvores de decisão"
-  → Tool: buscar_material_rag(query="entropia ganho informação")
-  → Retorna: [3 chunks] sobre entropia em TDIDT
-  → Gemma: Integra dados + explica naturalmente
-  ```
-
-### 2. **Agenda Acadêmica**
-- **Tool**: `consultar_agenda(periodo: "hoje" | "amanhã" | "semana")`
-- **Dados**: 10 eventos pré-carregados (2025-01-13 a 2025-01-17)
-- **Tipos**: Aulas, Provas, Trabalhos
-- **UI**: Painel com agendamento por data e tipo de evento
-
-### 3. **Lista de Tarefas**
-- **Tools**:
-  - `listar_tarefas(filtro: "pendentes" | "concluídas")`
-  - `adicionar_tarefa(texto, prioridade)`
-  - `concluir_tarefa(id_ou_nome)`
-- **Prioridades**: Alta, Média, Baixa
-- **Estatísticas**: Pendentes, Concluídas, % Progresso
-
-### 4. **Exercícios e Active Recall**
-- **Tool**: `gerar_exercicio(tópico)`
-- **Tópicos**: Árvores de Decisão, Entropia, IA Geral
-- **Formato**: Questão descritiva com dicas
-- **Integração**: Detecta "me faça perguntas", "active recall" etc.
-
-### 5. **Sistema de Avaliação (10 Questões)**
-- **Tool**: `gerar_questao_avaliacao(id_questao: 1-10)`
-- **Tool**: `avaliar_resposta(id_questao, resposta_usuario)`
-- **Tipos**: Conceitual (30%), Técnico (70%)
-- **Critério**: Palavras-chave esperadas (70%+ = correta, 40%-70% = parcial)
-- **Feedback**: Automático com conceitos faltantes
-
-### 6. **Logs de Tool Calling**
-- **Rastreamento**: Todas as ferramentas executadas
-- **Dados**: Tempo, Tool, Input, Output, Status
-- **UI**: Painel com estatísticas (total, sucesso, erros)
-
----
-
-## 📊 Dataset e Conhecimento
-
-### Cobertura (25 chunks)
-
-| Tópico | Chunks | Fontes | Keywords |
-|--------|--------|--------|----------|
-| **IA Geral** | 5 | Wikipedia, Russel & Norvig, MIT OCW | ia, turing, transformers, historia |
-| **Árvores de Decisão** | 8 | Quinlan, Breiman, Tan et al | tdidt, entropia, ganho, poda |
-| **Aprendizado de Máquina** | 6 | Goodfellow, Ng, Mitchell | supervisionado, validação, overfitting |
-| **Embeddings** | 3 | Bengio, Sentence-BERT, OpenAI | embedding, rag, similaridade |
-| **Avaliação** | 3 | NIST, Ribeiro, Goodfellow | teste, interpretavel, robustez |
-
-### Estratégia de Retrieval
-
-**Método**: TF com Keywords Manuais
-- ✅ **Vantagens**: Rápido, interpretável, sem dependências
-- ❌ **Limitações**: Sem semântica real, falha em sinônimos
-- **Exemplo de falha**: "redes neurais" ≠ "deep learning" (diferentes keywords)
-
-**Melhoria Proposta**: Implementar embeddings reais (Sentence-Transformers)
-
----
-
-## 📝 Sistema de Avaliação
-
-### 10 Questões de Teste
-
-| ID | Pergunta | Tipo | Keywords Esperadas |
-|----|----------|------|-------------------|
-| 1 | Teste de Turing? | Conceitual | turing, inteligencia, máquina |
-| 2 | Entropia vs Ganho? | Técnico | entropia, ganho, informação |
-| 3 | TDIDT seleciona atributo? | Conceitual | tdidt, ganho, máximo |
-| 4 | Overfitting e pós-poda? | Técnico | overfitting, poda, validação |
-| 5 | Supervisionado vs Não-Supervisionado? | Conceitual | supervisionado, labels |
-| 6 | Fórmula Recall? | Técnico | recall, verdadeiro, positivo |
-| 7 | O que são Embeddings? | Conceitual | embedding, vetorial, rag |
-| 8 | Fluxo RAG completo? | Técnico | rag, vetorizar, contexto |
-| 9 | Gain Ratio > Ganho Simples? | Conceitual | gain, ratio, penaliza |
-| 10 | Vantagens/Limitações Árvores? | Técnico | interpretavel, instabilidade |
-
-### Critério de Avaliação
-
-```javascript
-matchPercentage = (palavras_chave_encontradas / palavras_chave_esperadas) * 100
-
-if (matchPercentage >= 70%)
-  status = "CORRETA" // Demonstrou compreensão
-else if (matchPercentage >= 40%)
-  status = "PARCIAL" // Conceitos faltando
-else
-  status = "INCORRETA" // Não responde adequadamente
-```
-
-### Exemplo de Uso
+### Fluxo de uma mensagem no chat
 
 ```
-Usuário: "Me faça a questão 1"
-→ Tool: gerar_questao_avaliacao(id_questao=1)
-→ Retorna: "O que é o Teste de Turing?"
-
-Usuário: "É um teste para avaliar se uma máquina consegue conversar como humano"
-→ Tool: avaliar_resposta(id_questao=1, resposta="...")
-→ Status: CORRETA
-→ Feedback: "Excelente! Você demonstrou compreensão dos conceitos-chave."
+Usuário digita mensagem
+        │
+        ▼
+[1ª chamada LLM] — Gemma recebe mensagem + schemas das 7 ferramentas
+        │          e decide quais chamar (resposta em JSON)
+        ▼
+executor.py executa as ferramentas escolhidas pela LLM
+        │          e registra logs (ferramenta, args, resultado)
+        ▼
+[2ª chamada LLM] — Gemma recebe os resultados das ferramentas
+        │          e gera a resposta final em linguagem natural
+        ▼
+Frontend exibe resposta + atualiza painel de Logs
 ```
 
 ---
 
-## 🚨 Análise de Erros
+## Funcionalidades implementadas
 
-### ERRO 1: RAG com TF Básico (Sem Embeddings Reais)
+### 3.1 Consulta a materiais de estudo (RAG)
 
-**Problema**:
-- Tokenização simples + keywords manualmente definidas
-- Não captura semântica (sinônimos, conceitos relacionados)
-- Buscas falham para variações de termos
+Pipeline completo implementado em `backend/rag/`:
 
-**Cenário**:
-- Usuário: "O que são redes neurais?"
-- Base contém: "deep learning" com keywords ['deep', 'learning', 'redes']
-- TF: Busca por "redes, neurais" → match parcial (1/2)
-- Resultado: Pode não recuperar ou recuperar com score baixo
+- **Carregamento**: `loader.py` lê arquivos `.txt` e `.pdf` de `data/raw/`
+- **Chunking**: `chunker.py` usa sliding window com 200 palavras e overlap de 50
+- **Embeddings**: `embedder.py` tenta BERT (`all-MiniLM-L6-v2`); fallback automático para TF-IDF se torch falhar
+- **Recuperação**: `retriever.py` usa cosine similarity com `sklearn`
+- **Cache**: o índice é salvo em `data/chunks.json` após a primeira build
 
-**Solução**:
-```python
-# Implementar Sentence-Transformers (production)
-from sentence_transformers import SentenceTransformer
-model = SentenceTransformer('distiluse-base-multilingual-cased-v2')
-
-query_embedding = model.encode("O que são redes neurais?")
-chunk_embeddings = [model.encode(c['text']) for c in knowledgeBase]
-scores = cosine_similarity([query_embedding], chunk_embeddings)[0]
-top_k = np.argsort(scores)[-3:][::-1]
+Exemplos de uso no chat:
+```
+"Explique entropia em árvores de decisão"
+"Resuma o material sobre embeddings"
+"Quais são as vantagens das redes neurais?"
 ```
 
-### ERRO 2: Tool Calling por Lógica Fixa (Não por LLM)
+### 3.2 Agenda acadêmica
 
-**Problema**:
-- `detectTools()` usa regex + keywords hardcoded
-- LLM (Gemma) não decide quais ferramentas chamar
-- Não compreende variações ou intenções complexas
+Armazenada em SQLite (`storage/jarvis.db`). Persiste entre reinicializações.
 
-**Cenário**:
-- Usuário: "Quais aulas tenho na próxima semana?"
-- Regex: `/agenda|aula|tenho/i` detecta "aula" + "tenho"
-- Mas: Se usuário disser "Mostre minha agenda semanal" (sem "aula")
-- Resultado: Ferramenta pode não ser acionada
+- 10 eventos pré-cadastrados (aulas, provas, trabalhos)
+- Consultas por período: `hoje`, `amanha`, `semana`
+- Painel visual com filtros
 
-**Solução**:
-```javascript
-// Passar tool schemas para Gemma (OpenAI-style)
-const tools = [
-  {
-    "type": "function",
-    "function": {
-      "name": "consultar_agenda",
-      "description": "Consulta eventos acadêmicos por período",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "periodo": { "type": "string", "enum": ["hoje", "amanhã", "semana"] }
-        }
-      }
-    }
-  }
-  // ... mais tools
-];
-
-// Gemma.messages com tool_choice="auto" gera chamadas JSON
-// Frontend valida e executa
+Exemplos de uso no chat:
+```
+"O que tenho hoje?"
+"Tenho prova amanhã?"
+"Quais são minhas aulas esta semana?"
 ```
 
-### ERRO 3: Sem Sanitização de Input
+### 3.3 Lista de tarefas
 
-**Problema**:
-- `avaliar_resposta()` recebe resposta_usuario sem validação
-- XSS potencial ao renderizar no HTML
-- DoS possível com strings muito grandes
+Também persistida em SQLite.
 
-**Cenário**:
+- Adicionar tarefa com prioridade (alta / média / baixa)
+- Listar pendentes ou concluídas
+- Marcar como concluída pelo ID
+- Painel visual com formulário de adição
+
+Exemplos de uso no chat:
 ```
-resposta_usuario = "<img src=x onerror='alert(\"XSS\")'>"
-→ Renderizado no chat sem escape
-→ Script executado
-
-resposta_usuario = "A" * 1000000
-→ Processamento lento, memory leak
-```
-
-**Solução**:
-```javascript
-function sanitizeInput(text) {
-  // Remover tags HTML
-  text = text.replace(/<[^>]*>/g, '');
-  
-  // Limitar tamanho (ex: 500 chars)
-  if (text.length > 500) text = text.substring(0, 500);
-  
-  // Remover caracteres de controle
-  text = text.replace(/[\x00-\x1F\x7F]/g, '');
-  
-  return text;
-}
-
-const resposta = sanitizeInput(args.resposta_usuario);
-const tokensSanitized = tokenize(resposta);
+"Adiciona tarefa: estudar redes neurais, prioridade alta"
+"Liste minhas tarefas pendentes"
+"Conclui a tarefa 3"
 ```
 
-### ERRO 4: API Key Exposta em Client-Side
+### 3.4 Planejamento de estudos
 
-**Problema**:
-- Credenciais Gemma (`API_KEY`) visíveis no código-fonte HTML
-- Qualquer pessoa pode inspecionar e copiar a chave
-- Abuso de quota API
+Ferramenta `planejar_estudos(foco)` em `backend/tools/learning.py`:
 
-**Cenário**:
+- Consulta agenda da semana
+- Lista tarefas pendentes
+- Busca materiais relevantes no RAG pelo foco informado
+- Gera plano consolidado
+
+Exemplos de uso no chat:
 ```
-Usuário abre DevTools (F12) → Ctrl+F → "Cxt2ftLF7d3..."
-→ Copia a chave
-→ Usa em outro lugar ou compartilha
-```
-
-**Solução**:
-```javascript
-// Backend (Node.js / Python Flask)
-app.post('/api/llm', async (req, res) => {
-  const { messages } = req.body;
-  
-  // Backend guarda a chave segura (environment variable)
-  const API_KEY = process.env.GEMMA_API_KEY;
-  
-  const response = await fetch('https://llm.liaufms.org/...', {
-    headers: { 'Authorization': `Bearer ${API_KEY}` },
-    body: JSON.stringify({ messages, ... })
-  });
-  
-  res.json(response.json());
-});
-
-// Frontend só faz requisição local
-const response = await fetch('/api/llm', {
-  method: 'POST',
-  body: JSON.stringify({ messages })
-});
-```
-
-### ERRO 5: Sem Retry/Timeout em API Calls
-
-**Problema**:
-- Se Gemma lento ou retornar erro 429 (rate limit), app trava
-- Sem timeout configurado, requisição pode ficar pendente infinitamente
-- Sem retry, erro transiente mata a experiência
-
-**Cenário**:
-```
-Múltiplos usuários → muitas requisições simultâneas
-→ Gemma retorna: 429 Too Many Requests
-→ App mostra: "Erro ao conectar..."
-→ Usuário recarrega página (pior ainda)
-```
-
-**Solução**:
-```javascript
-async function callLLMWithRetry(msg, toolResults, maxRetries = 3) {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
-      
-      const response = await fetch(API_URL, {
-        signal: controller.signal,
-        // ... headers, body
-      });
-      
-      clearTimeout(timeout);
-      
-      if (response.status === 429) {
-        // Rate limit: aguardar exponencial
-        const waitTime = Math.pow(2, attempt) * 1000;
-        console.log(`Rate limited. Retrying in ${waitTime}ms...`);
-        await new Promise(r => setTimeout(r, waitTime));
-        continue;
-      }
-      
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
-      
-    } catch (error) {
-      if (attempt === maxRetries) throw error;
-      console.warn(`Attempt ${attempt} failed:`, error.message);
-    }
-  }
-}
-```
-
-### ERRO 6: Dataset Limitado (25 chunks)
-
-**Problema**:
-- Cobertura insuficiente para buscas diversificadas
-- Conceitos importantes podem estar ausentes (SVM, Naive Bayes, etc.)
-- Buscas por tópicos não cobertos retornam "não encontrado"
-
-**Cenário**:
-```
-Usuário: "Explique Support Vector Machines (SVM)"
-→ Base: Sem chunks sobre SVM
-→ Resultado: "Nenhum trecho relevante encontrado"
-```
-
-**Solução**:
-```python
-# Python script para expandir dataset com Web Scraping
-
-import requests
-from bs4 import BeautifulSoup
-import json
-
-topics = [
-  "Support Vector Machines",
-  "Naive Bayes",
-  "K-means Clustering",
-  "Gradient Descent"
-]
-
-for topic in topics:
-  # Buscar em Wikipedia
-  url = f"https://en.wikipedia.org/wiki/{topic}"
-  response = requests.get(url)
-  soup = BeautifulSoup(response.content, 'html.parser')
-  
-  paragraphs = soup.find_all('p')[:3]  # Primeiras 3 paráfrases
-  
-  for i, para in enumerate(paragraphs):
-    chunk = {
-      "id": f"k_scraped_{len(knowledgeBase) + i}",
-      "doc": f"{topic} - Wikipedia",
-      "source": f"Wikipedia - {topic}",
-      "text": para.get_text(),
-      "keywords": topic.lower().split() + ["machine", "learning"]
-    }
-    knowledgeBase.append(chunk)
-
-# Ou usar API acadêmica (arXiv)
-import arxiv
-
-client = arxiv.Client()
-results = client.results(arxiv.Search(query="machine learning classification"))
-for result in results[:5]:
-  chunk = {
-    "id": f"arxiv_{result.entry_id}",
-    "doc": result.title,
-    "source": f"arXiv - {result.published.year}",
-    "text": result.summary,
-    "keywords": result.title.lower().split()
-  }
-  knowledgeBase.append(chunk)
-
-# Salvar expandido
-with open('knowledgebase_expanded.json', 'w') as f:
-  json.dump(knowledgeBase, f, ensure_ascii=False, indent=2)
+"Monte um plano de estudos para a prova de IA"
+"O que devo priorizar hoje?"
+"Me ajude a organizar a semana"
 ```
 
 ---
 
-## 📖 Como Usar
-
-### 1. Abrir a Aplicação
-- Arquivo: `jarvis_academico.html`
-- Browser: Chrome, Firefox, Edge (moderno)
-- Sem instalação necessária (pure HTML/JS)
-
-### 2. Interface
-
-**Sidebar (esquerda)**:
-- 🗨️ Chat (padrão)
-- 📅 Agenda
-- ✅ Tarefas
-- 📚 Materiais RAG
-- 🔍 Logs
-
-**Chat Area**:
-- Input: Digite pergunta ou comando
-- Quick Actions: Botões pré-definidos
-- Histórico: Conversa com timestamps
-
-### 3. Exemplos de Uso
-
-#### Exemplo 1: Consultar Agenda
-```
-Você: "O que tenho hoje?"
-JARVIS: [Executa: consultar_agenda("hoje")]
-        08:00 - Inteligência Artificial (aula) @ Lab 204
-        10:00 - Estrutura de Dados (aula) @ Sala 102
-        ...
-```
-
-#### Exemplo 2: Aprender com RAG
-```
-Você: "Explique entropia em árvores de decisão"
-JARVIS: [Executa: buscar_material_rag("entropia ganho")]
-        [Recupera 3 chunks]
-        Entropia mede o grau de mistura de classes...
-        O atributo escolhido fornece o Ganho Máximo...
-```
-
-#### Exemplo 3: Gerar Exercício
-```
-Você: "Me faça um exercício sobre árvores"
-JARVIS: [Executa: gerar_exercicio("arvores")]
-        Questão: Dada tabela com atributos [Tempo, Temp, Umidade]...
-        calcule entropia e ganho de informação...
-```
-
-#### Exemplo 4: Sistema de Avaliação
-```
-Você: "Questão 1"
-JARVIS: [Executa: gerar_questao_avaliacao(1)]
-        [Questão] O que é Teste de Turing?
-        
-Você: "É um teste para avaliar inteligência de uma máquina"
-JARVIS: [Executa: avaliar_resposta(1, resposta)]
-        [Status: CORRETA]
-        Excelente! Você demonstrou compreensão...
-```
-
-#### Exemplo 5: Plano de Estudos
-```
-Você: "Monte um plano de estudos para amanhã"
-JARVIS: [Executa: consultar_agenda("amanha")]
-        [Executa: listar_tarefas("pendentes")]
-        
-        PLANO PARA AMANHÃ:
-        - 08:00: Prova Cálculo II (revisar...)
-        - 14:00: Redes de Computadores (acompanhar)
-        
-        TAREFAS CRÍTICAS:
-        1. Estudar Árvores de Decisão (ALTA)
-        2. Implementar RAG (ALTA)
-        ...
-```
-
----
-
-## ⚙️ Configuração
+## Como instalar e rodar
 
 ### Pré-requisitos
-- ✅ Node.js 18+ (v26.1.0 testado)
-- ✅ npm ou yarn
-- ✅ Browser moderno (Chrome 90+, Firefox 88+, Edge 90+)
-- ✅ Conexão à internet (para Gemma API via proxy)
-- ✅ Acesso a `https://llm.liaufms.org` (rede da UFMS)
 
-### Instalação (Primeiras Vezes)
+- Python 3.11 ou 3.12
+- Acesso à rede da UFMS (ou VPN) para `llm.liaufms.org`
 
-**Passo 1**: Navegar para o diretório
-```bash
-cd "c:\Users\joaoa\Trabalho_IA_Jarvis_de_Marco-Joao"
+### Passo 1 — instalar dependências
+
+```powershell
+pip install -r requirements.txt
 ```
 
-**Passo 2**: Instalar dependências
-```bash
-npm install
+Se quiser o torch CPU-only (evita problemas de DLL no Windows):
+
+```powershell
+pip install torch --index-url https://download.pytorch.org/whl/cpu
 ```
 
-Isso instala:
-- `express` - Servidor web Node.js
-- `cors` - Suporte a CORS (essencial para evitar bloqueios)
+> O sistema funciona sem torch usando TF-IDF como fallback para embeddings.
 
-### Como Usar
+### Passo 2 — iniciar o servidor
 
-**Terminal 1** - Inicie o Proxy Server:
-```bash
-node proxy.js
+```powershell
+python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Você deve ver:
-```
-✅ JARVIS Proxy rodando em http://localhost:3000
-📡 Encaminhando requisições para: https://llm.liaufms.org/v1/gemma-3-12b-it/chat/completions
-🔗 Use: http://localhost:3000/api/chat
-```
+### Passo 3 — acessar o sistema
 
-**Terminal 2** - Abra a aplicação (escolha um):
+Abra no browser:
 
-*Opção A*: Abrir diretamente no navegador
 ```
-file:///c:/Users/joaoa/Trabalho_IA_Jarvis_de_Marco-Joao/jarvis_academico.html
+http://localhost:8000
 ```
 
-*Opção B*: Usar um servidor local
-```bash
-npx http-server
-# Acesse: http://localhost:8080/jarvis_academico.html
+Na **primeira execução**, o servidor vai:
+1. Criar o banco SQLite em `storage/jarvis.db` com agenda e tarefas de exemplo
+2. Carregar os 10 documentos de `data/raw/`, gerar chunks e embeddings
+3. Salvar o índice em `data/chunks.json` (execuções seguintes carregam o cache)
+
+### Rodar os testes
+
+```powershell
+python tests/test_rag.py
+python tests/test_tools.py
+python tests/test_evaluation.py
 ```
 
-✅ **Pronto!** A interface deve aparecer com "sistema online" 🟢
+Ou com pytest:
 
-### Variáveis de Configuração
-
-O arquivo `jarvis_academico.html` contém (linhas ~468):
-
-```javascript
-// URL do Proxy (não da API remota!)
-let API_URL = localStorage.getItem('jarvis_api_url') || 'http://localhost:3000/api/chat';
-
-// API Key (guardada no proxy.js, não exposta aqui)
-let API_KEY = localStorage.getItem('jarvis_api_key') || 'Cxt2ftLF7d3mHS2JdiFqB-eSDAQeZvFATPXPs02lV9A';
-
-// Modelo
-let MODEL = localStorage.getItem('jarvis_model') || 'google/gemma-3-12b-it';
-```
-
-**Para mudar o proxy/modelo** (via painel ⚙️ Configurações):
-1. Abra **Configurações** no app
-2. Modifique **URL da API**, **API Key**, **Modelo**
-3. Clique **💾 Salvar**
-
-**Para mudar para outro modelo** (ex: OpenAI):
-```javascript
-// No painel Configurações, altere:
-API_URL: https://api.openai.com/v1/chat/completions
-API_KEY: sk-...
-MODEL: gpt-4-turbo
-```
-
-### Limites e Timeouts
-
-```javascript
-// RAG: Número de chunks recuperados
-const topK = 3;  // Aumentar para mais contexto (custo)
-
-// LLM: Máximo de tokens na resposta
-max_tokens: 1024  // Aumentar para respostas mais longas
-
-// Chat: Histórico de contexto
-state.chatHistory.slice(-6)  // Usar últimas 6 mensagens
-
-// Timeout de requisição
-const timeoutId = setTimeout(() => controller.abort(), 30000);  // 30 segundos
-
-// Retry automático
-fetchWithRetry(URL, options, 3)  // Máx 3 tentativas com backoff
-```
-
-### Troubleshooting
-
-**Erro: "Failed to fetch"**
-```
-→ Certifique-se que o proxy.js está rodando (Terminal 1)
-→ Verifique se a porta 3000 não está em uso
-→ Tente: lsof -i :3000  (Mac/Linux) ou netstat -ano (Windows)
-```
-
-**Erro: "Cannot find module 'express'"**
-```bash
-→ npm install
-```
-
-**Erro: "Timeout"**
-```
-→ Gemma demorou mais de 30s
-→ O retry automático tentará 3x
-→ Se persistir, use "Modo Offline" (⚙️ Configurações)
-```
-
-**Erro: "Não consigo acessar llm.liaufms.org"**
-```
-→ Verifique se está na rede da UFMS (ou VPN)
-→ Teste: ping llm.liaufms.org
-→ Ou use servidor Ollama local: http://localhost:11434
+```powershell
+python -m pytest tests/ -v
 ```
 
 ---
 
-## � Melhorias Implementadas (Iteração 2)
+## Como usar o sistema
 
-### ✅ Melhoria 1: RAG com TF-IDF + Similaridade Cosseno
+A interface tem 4 painéis acessíveis pela barra lateral:
 
-**Data**: Maio 18, 2026  
-**Status**: ✅ IMPLEMENTADO
+| Painel | Função |
+|--------|--------|
+| **Chat** | Conversa com JARVIS — aciona ferramentas automaticamente via LLM |
+| **Agenda** | Visualiza eventos por período (hoje / amanhã / semana) |
+| **Tarefas** | Adiciona, filtra e conclui tarefas |
+| **Logs** | Registro de cada ferramenta acionada pela LLM |
 
-**Antes**:
-```javascript
-// TF simples: contagem de matches / total de tokens
-const score = hits.length / Math.max(qTokens.length, 1);  // [0, 1]
+### Exemplos práticos
+
+**Consultar agenda:**
+```
+"O que tenho hoje?"
+"Tenho prova esta semana?"
 ```
 
-**Depois**:
-```javascript
-// TF-IDF + Cosine Similarity
-function computeTFIDF(tokens, chunks) {
-  // Calcula IDF para cada token (inverso de frequência entre documentos)
-  // Resultado: Vector TF-IDF que penaliza termos comuns
-}
-
-function cosineSimilarity(vec1, vec2) {
-  // Produto escalar normalizado: mede ângulo entre vetores
-}
-
-const cosineSim = cosineSimilarity(queryTFIDF, chunkTFIDF);
-const finalScore = (cosineSim * 0.7) + (keywordScore * 0.3);
+**Buscar material:**
+```
+"Explique o algoritmo TDIDT"
+"O que é bias-variance tradeoff?"
+"Como funciona o RAG?"
 ```
 
-**Impacto**:
-- ✅ RAG melhora de 18/20 para 19/20
-- ✅ Busca semântica mais precisa
-- ✅ Detecta similaridade mesmo com termos diferentes
-- ⚠️ Ainda sem embeddings reais (BERT) para máxima qualidade
-
-**Teste**:
+**Gerenciar tarefas:**
 ```
-Query: "redes neurais profundas"
-Chunks com "deep learning" (antes): Score baixo
-Chunks com "deep learning" (depois): Score alto (via TF-IDF)
+"Adiciona tarefa: revisar capítulo 3, prioridade alta"
+"Quais tarefas tenho pendentes?"
+"Conclui a tarefa 2"
 ```
 
----
-
-### ✅ Melhoria 2: Sanitização de Input Contra XSS
-
-**Data**: Maio 18, 2026  
-**Status**: ✅ IMPLEMENTADO
-
-**Antes**:
-```javascript
-const userTokens = tokenize(resposta_usuario);  // ❌ Sem validação
+**Plano de estudos:**
+```
+"Monte um plano para a prova de IA de amanhã"
+"O que devo estudar hoje?"
 ```
 
-**Depois**:
-```javascript
-function sanitizeInput(input) {
-  if (typeof input !== 'string') return String(input);
-  // Remove tags HTML perigosas e limita tamanho para evitar DoS
-  return input
-    .replace(/<script[^>]*>.*?<\/script>/gi, '')
-    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
-    .replace(/<on\w+\s*=/gi, '')
-    .substring(0, 5000);  // Max 5000 caracteres
-}
-
-const sanitizedResponse = sanitizeInput(resposta_usuario);
-const userTokens = tokenize(sanitizedResponse);
+**Exercícios e avaliação:**
 ```
-
-**Impacto**:
-- ✅ Previne XSS attacks (scripts inline removidos)
-- ✅ Previne DoS (limite de 5000 caracteres)
-- ✅ Melhora score de Engenharia (segurança)
-
-**Teste**:
-```
-Input: "<script>alert('XSS')</script>"
-Output: "" (removido com segurança)
-
-Input: "A" * 10000
-Output: "AAA..." (5000 chars max)
+"Me faça um exercício sobre árvores de decisão"
+"Quero praticar embeddings"
+"Me avalie sobre o conteúdo de IA"
 ```
 
 ---
 
-### ✅ Melhoria 3: Retry com Backoff Exponencial
+## Dataset
 
-**Data**: Maio 18, 2026  
-**Status**: ✅ IMPLEMENTADO
+Pasta: `data/raw/` — 10 documentos em formato `.txt`
 
-**Antes**:
-```javascript
-const response = await fetch(API_URL, options);
-// ❌ Uma tentativa só, falha imediata em erro
+| Arquivo | Tópico | Fontes principais |
+|---------|--------|-------------------|
+| `01_ia_fundamentos.txt` | IA — Fundamentos e história | Wikipedia, Russel & Norvig, MIT OCW |
+| `02_arvores_decisao.txt` | Árvores de Decisão (TDIDT) | Quinlan C4.5, Breiman CART, Shannon |
+| `03_aprendizado_maquina.txt` | Aprendizado de Máquina | Goodfellow, Andrew Ng, Tom Mitchell |
+| `04_embeddings_rag.txt` | Embeddings e RAG | Sentence-BERT, Lewis et al (RAG paper) |
+| `05_redes_neurais.txt` | Redes Neurais e Deep Learning | LeCun, Vaswani (Transformer) |
+| `06_processamento_linguagem_natural.txt` | PLN | Jurafsky & Martin, Devlin (BERT) |
+| `07_algoritmos_busca.txt` | Busca e Otimização | Russel & Norvig, Hart (A*) |
+| `08_avaliacao_sistemas_ia.txt` | Avaliação e Explicabilidade | NIST, LIME, SHAP |
+| `09_visao_computacional.txt` | Visão Computacional | LeCun, He (ResNet), Redmon (YOLO) |
+| `10_etica_ia.txt` | Ética em IA | Floridi et al, Jobin et al |
+
+**Estratégia de chunking:** sliding window com 200 palavras e overlap de 50 palavras (`backend/rag/chunker.py`). O overlap preserva contexto entre chunks adjacentes — sem ele, conceitos que atravessam a fronteira entre chunks seriam cortados. 200 palavras equilibra granularidade (precisão na recuperação) e conteúdo suficiente para a LLM gerar uma resposta completa.
+
+**Limitações:** cobertura focada em tópicos da disciplina; temas como SVM, K-Means e Naive Bayes estão presentes mas com menos profundidade.
+
+Metadados completos: [`data/metadata.json`](data/metadata.json)
+
+---
+
+## Tool Calling
+
+7 ferramentas implementadas em `backend/tools/`:
+
+| Ferramenta | Descrição |
+|------------|-----------|
+| `consultar_agenda` | Eventos de hoje, amanhã ou da semana |
+| `listar_tarefas` | Pendentes ou concluídas |
+| `adicionar_tarefa` | Adiciona tarefa com prioridade |
+| `concluir_tarefa` | Marca tarefa como concluída pelo ID |
+| `buscar_material_rag` | Busca semântica nos documentos |
+| `gerar_exercicio` | Gera exercício sobre um tópico |
+| `planejar_estudos` | Plano combinando agenda + tarefas + RAG |
+
+### Como a LLM decide
+
+Os schemas JSON das ferramentas são enviados à Gemma em cada mensagem (`backend/tools/definitions.py`). A LLM responde com um JSON indicando quais ferramentas chamar e com quais argumentos. O `executor.py` executa as ferramentas escolhidas e registra o log.
+
+```
+1ª chamada: "Gemma, dado o prompt do usuário e estas 7 ferramentas, quais você quer chamar?"
+Gemma responde: {"tools": [{"name": "consultar_agenda", "args": {"periodo": "hoje"}}]}
+
+executor.py executa consultar_agenda("hoje") → resultado do banco SQLite
+
+2ª chamada: "Gemma, aqui estão os resultados. Gere uma resposta natural."
 ```
 
-**Depois**:
-```javascript
-async function fetchWithRetry(url, options = {}, maxRetries = 3) {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await fetch(url, options);
-      if (response.ok) return response;  // Sucesso!
-      
-      // Erros recuperáveis: 429 (rate limit), 503 (down)
-      if (response.status === 429 || response.status === 503) {
-        if (attempt < maxRetries - 1) {
-          const waitTime = 1000 * Math.pow(2, attempt) + Math.random() * 1000;
-          console.log(`⏳ Rate limit. Aguardando ${waitTime.toFixed(0)}ms...`);
-          await new Promise(r => setTimeout(r, waitTime));
-          continue;
-        }
-      }
-      return response;
-    } catch (error) {
-      if (attempt < maxRetries - 1) {
-        const waitTime = 1000 * Math.pow(2, attempt) + Math.random() * 1000;
-        await new Promise(r => setTimeout(r, waitTime));
-      } else {
-        throw error;
-      }
-    }
-  }
-}
+> O servidor `llm.liaufms.org` não tem `--enable-auto-tool-choice` habilitado, portanto a decisão de ferramentas é feita via prompt estruturado em vez do protocolo nativo do OpenAI. A LLM ainda decide — o protocolo de comunicação é diferente.
+
+**Logs:** cada chamada registra ferramenta, argumentos, resultado e timestamp em `backend/tools/executor.py`. Visíveis no painel **Logs** da interface.
+
+---
+
+## Avaliação do sistema
+
+10 perguntas em `backend/evaluation/questions.py`, cobrindo os tópicos do dataset:
+
+| # | Pergunta | Tipo | Tópico |
+|---|----------|------|--------|
+| 1 | O que é o Teste de Turing? | Conceitual | IA Fundamentos |
+| 2 | Explique a Entropia de Shannon em árvores de decisão | Técnico | Árvores |
+| 3 | Diferença entre pré-poda e pós-poda | Conceitual | Árvores |
+| 4 | O que é overfitting e o trade-off bias-variance? | Conceitual | ML |
+| 5 | O que são embeddings e como a similaridade cosseno é usada no RAG? | Técnico | RAG |
+| 6 | Explique Precision, Recall e F1. Quando usar F1? | Técnico | Avaliação |
+| 7 | O que é o Transformer e o papel do Self-Attention? | Técnico | Redes Neurais |
+| 8 | Descreva o fluxo completo de um sistema RAG | Técnico | RAG |
+| 9 | O que é viés algorítmico? Cite um exemplo real | Conceitual | Ética |
+| 10 | Explique o algoritmo A* e o que é uma heurística admissível | Técnico | Busca |
+
+**Critério de classificação** (`backend/evaluation/scorer.py`):
+- **Correta**: ≥ 70% das keywords esperadas presentes na resposta
+- **Parcialmente correta**: 40–69%
+- **Incorreta**: < 40%
+
+Para cada resposta avaliada, o sistema também retorna os **3 chunks mais relevantes recuperados pelo RAG** para aquela questão.
+
+**Como usar a avaliação no chat:**
 ```
-
-**Tempos de Espera**:
-- 1ª falha: ~2000ms + jitter(0-1000ms)
-- 2ª falha: ~4000ms + jitter(0-1000ms)
-- 3ª falha: ~8000ms + jitter(0-1000ms)
-
-**Impacto**:
-- ✅ Resiste a rate limits (429 Too Many Requests)
-- ✅ Resiste a downtime temporário (503 Service Unavailable)
-- ✅ Network glitches não causam falha imediata
-- ✅ Melhora confiabilidade em conexões instáveis
-
-**Teste**:
-```
-Cenário 1: Primeira tentativa retorna 429
-→ Aguarda 2s + jitter
-→ Segunda tentativa retorna 200 OK ✅
-
-Cenário 2: Timeout na 1ª tentativa
-→ Aguarda 2s
-→ Retenta
-→ 3ª tentativa sucesso ✅
+"Me avalie sobre IA"
+"Quero responder a questão 5"
+"Me faça perguntas sobre o conteúdo"
 ```
 
 ---
 
-### ✅ Melhoria 4: Scoring Melhorado em avaliar_resposta()
+## Análise de erros
 
-**Data**: Maio 18, 2026  
-**Status**: ✅ IMPLEMENTADO
+### Erro 1 — BERT indisponível no Windows (DLL do PyTorch)
 
-**Antes**:
-```javascript
-const keywordMatches = q.expectedKeywords.filter(...);
-const matchPercentage = (keywordMatches.length / q.expectedKeywords.length) * 100;
+**Tipo:** ambiente / dependência  
+**Causa:** o PyTorch instalado no Windows tem incompatibilidade de DLL (`c10.dll`), impedindo o carregamento do `sentence-transformers`.  
+**Impacto:** embeddings BERT não funcionam; o sistema usa TF-IDF automaticamente.  
+**Solução implementada:** fallback automático em `backend/rag/embedder.py` — tenta BERT, captura a exceção e ativa TF-IDF sem interromper o servidor.  
+**Solução completa:** instalar a build CPU-only do PyTorch: `pip install torch --index-url https://download.pytorch.org/whl/cpu`
 
-// Feedback simples
-if (matchPercentage >= 70) feedback = 'Excelente!';
-```
+### Erro 2 — Tool calling nativo não suportado pelo servidor
 
-**Depois**:
-```javascript
-// Análise em profundidade
-let matchCount = 0;
-const matchedKeywords = [];
+**Tipo:** limitação de infraestrutura  
+**Causa:** o servidor `llm.liaufms.org` não foi iniciado com `--enable-auto-tool-choice`, portanto rejeita requisições com `tool_choice="auto"` com erro 400.  
+**Impacto:** não é possível usar o protocolo nativo OpenAI de function calling.  
+**Solução implementada:** a decisão de ferramentas é feita via prompt estruturado — a Gemma lê os schemas e responde com JSON. Quatro estratégias de extração de JSON garantem resiliência à saída malformada do modelo.
 
-q.expectedKeywords.forEach(keyword => {
-  // Busca exata
-  if (userTokens.includes(keyword)) {
-    matchCount++;
-    matchedKeywords.push(keyword);
-  }
-  // Substring matching
-  else if (userText.includes(keyword)) {
-    matchCount++;
-    matchedKeywords.push(keyword);
-  }
-  // Prefixo (ex: 'gan' para 'ganho')
-  else if (keyword.length > 3 && userText.includes(keyword.substring(0, 3))) {
-    matchCount += 0.5;
-    matchedKeywords.push(keyword);
-  }
-});
+### Erro 3 — JSON malformado na resposta de decisão de ferramentas
 
-const matchPercentage = (matchCount / q.expectedKeywords.length) * 100;
-const missingKeywords = q.expectedKeywords.filter(k => !matchedKeywords.includes(k));
+**Tipo:** geração  
+**Causa:** o Gemma 12B às vezes gera JSON com vírgulas ou aspas faltando na resposta de roteamento de ferramentas.  
+**Impacto:** a ferramenta correta não é acionada e a LLM responde sem contexto adicional.  
+**Solução implementada:** `_extract_tool_calls()` em `backend/llm/client.py` tenta 4 estratégias: parse direto, extração de bloco markdown, busca por `{...}` no texto, e detecção de "nenhuma ferramenta".
 
-// Feedback detalhado
-if (matchPercentage >= 70) {
-  feedback = `✅ Excelente! Conceitos: ${matchedKeywords.join(', ')}`;
-} else if (matchPercentage >= 40) {
-  feedback = `⚠️ Parcial. Presentes: ${matched}. Faltam: ${missing}.\\nDica: Revise...`;
-} else {
-  feedback = `❌ Incorreto. Estude: ${expected.join(', ')}`;
-}
+### Erro 4 — Cobertura limitada do dataset
 
-// Armazena resultado com score
-state.avaliationResults.push({ score: matchPercentage, ... });
-```
+**Tipo:** recuperação  
+**Causa:** 10 documentos cobrem apenas parte do currículo (não há SVM, K-Means, Naive Bayes em profundidade).  
+**Impacto:** perguntas sobre tópicos não cobertos retornam chunks pouco relevantes.  
+**Solução:** expandir `data/raw/` com mais documentos — o pipeline carrega automaticamente qualquer `.txt` ou `.pdf` novo na pasta.
 
-**Impacto**:
-- ✅ Feedback específico com conceitos mencionados
-- ✅ Identifica conceitos faltantes
-- ✅ Fornece dicas personalizadas
-- ✅ Score percentual (0-100%) armazenado para análise
-- ✅ Melhora UX significativamente
+### Erro 5 — Persistência depende do servidor estar no ar
 
-**Teste**:
-```
-Resposta com 70% de keywords:
-→ Status: CORRETA
-→ Feedback: "✅ Excelente! Conceitos: entropia, ganho, ..."
-
-Resposta com 50% de keywords:
-→ Status: PARCIAL
-→ Feedback: "⚠️ Parcial. Presentes: poda. Faltam: TDIDT, ..."
-→ Dica: "Estude: TDIDT, ganho máximo, ..."
-```
+**Tipo:** arquitetura  
+**Causa:** agenda e tarefas vivem em SQLite local; se o banco for apagado, os dados somem.  
+**Impacto:** sem backup, dados são perdidos.  
+**Solução:** adicionar endpoint de exportação JSON ou backup automático do arquivo `.db`.
 
 ---
 
-### 📊 Score Antes vs Depois
+## Melhorias de aprendizado
+
+Implementadas em `backend/tools/learning.py`:
+
+### 1. Geração de exercícios (gerar_exercicio)
+
+Gera enunciados práticos com resposta esperada para 5 tópicos: árvores de decisão, embeddings, redes neurais, aprendizado de máquina e RAG. Fallback genérico para outros tópicos via busca RAG.
 
 ```
-COMPONENTE                  ANTES     DEPOIS    GANHO
-──────────────────────────────────────────────────
-RAG (TF vs TF-IDF)         18/20 →   19/20     +1pt
-Avaliação (feedback)        15/20 →   15/20     +0pts (UX)
-Engenharia (segurança)      10/10 →   10/10     +0pts (qualidade)
-Confiabilidade (retry)       X    →    X        +0pts (robusto)
-──────────────────────────────────────────────────
-TOTAL                       92/100    95/100    +3pts estimados
+"Me faça um exercício sobre entropia"
+"Quero praticar árvores de decisão"
 ```
 
----
+### 2. Planejamento de estudos (planejar_estudos) — interativo
 
-## �🚀 Melhorias Futuras
+Combina agenda da semana + tarefas pendentes + trechos RAG relevantes para montar um plano personalizado. O usuário informa o foco e o sistema retorna um plano detalhado com eventos e materiais associados.
 
-### Curto Prazo (Priority 1)
-- [ ] Implementar **Sentence-Transformers** para embeddings reais
-- [ ] Mover API Key para backend (proxy Node.js/Python)
-- [ ] Adicionar **retry com backoff exponencial**
-- [ ] Sanitizar input em `avaliar_resposta()`
-- [ ] Expandir dataset para 50+ chunks (web scraping)
+```
+"Monte um plano de estudos para a prova de IA"
+"O que devo priorizar esta semana?"
+```
 
-### Médio Prazo (Priority 2)
-- [ ] **Tool Calling decidido por LLM** (passar schemas ao Gemma)
-- [ ] Implementar **Vector Database** (Pinecone, Weaviate)
-- [ ] Adicionar **Testes Unitários** (Vitest, Jest)
-- [ ] Criar **Backend API** (Express/FastAPI) para operações intensivas
-- [ ] Integrar **PostgreSQL** para persistência (agenda, tarefas, resultados)
+### 3. Active recall via avaliação
 
-### Longo Prazo (Priority 3)
-- [ ] Mobile app (React Native)
-- [ ] Suporte a **streaming** (respostas em tempo real)
-- [ ] **Fine-tuning** do Gemma com dados acadêmicos
-- [ ] Análise de **learning paths** personalizados
-- [ ] **Integração com LMS** (Canvas, Moodle)
-- [ ] Geração automática de **resumos PDF**
+O módulo `backend/evaluation/scorer.py` permite que o usuário responda perguntas e receba feedback imediato com: status (correta/parcial/incorreta), keywords encontradas, keywords faltantes, sugestão de revisão e documentos relevantes recuperados pelo RAG.
 
 ---
 
-## 📊 Estatísticas e Métricas
+## Engenharia de software
 
-### Performance Esperada
-| Métrica | Valor |
-|---------|-------|
-| Tempo de resposta RAG | 50-200ms |
-| Latência Gemma API | 1-3s |
-| Uso de memória (app) | ~5MB |
-| Tamanho do arquivo HTML | ~80KB |
+### Organização e separação de responsabilidades
 
-### Cobertura de Conteúdo
-- ✅ **IA Geral**: 20% (fundamentos, história)
-- ✅ **Árvores de Decisão**: 32% (TDIDT, entropia, poda)
-- ✅ **Aprendizado de Máquina**: 24% (supervisionado, validação, métricas)
-- ✅ **Embeddings e RAG**: 12% (vetores, busca semântica)
-- ✅ **Avaliação**: 12% (testes, explicabilidade)
+Cada módulo tem uma única responsabilidade. Nenhum módulo de UI acessa a rede diretamente (tudo passa por `frontend/js/api.js`). Nenhum módulo do backend mistura lógica de domínio com acesso a banco (repositórios separados).
 
-### Questões de Teste
-- **Total**: 10 questões
-- **Tipos**: 40% conceitual, 60% técnico
-- **Cobertura**: Todos os tópicos principais
-- **Feedback**: Automático com palavras-chave esperadas
+### Tratamento de erros
 
----
+- Embedder: fallback BERT → TF-IDF sem interromper o servidor
+- LLM client: retry com backoff exponencial, sem retry em erros 400
+- Tool executor: captura exceções por ferramenta individualmente, sem derrubar o ciclo
+- Endpoints FastAPI: retornam mensagem de erro legível com traceback no log do servidor
 
-## 📞 Suporte e Créditos
+### Logs
 
-**Desenvolvido para**: Trabalho Prático de Inteligência Artificial  
-**Professor**: [Seu Professor]  
-**Disciplina**: Inteligência Artificial  
-**Instituição**: UFMS  
+- Tool calling: `backend/tools/executor.py` loga ferramenta, args, resultado e status via `logging`
+- LLM: `backend/llm/client.py` loga tentativas, rate limits e erros
+- RAG: `backend/rag/embedder.py` loga qual backend foi carregado
+- Painel **Logs** na interface mostra histórico em tempo real
 
-**Tecnologias**:
-- 🤖 Gemma 3 12B (Google)
-- 🔍 TF-IDF + Keywords (RAG)
-- 💾 LocalStorage (persistência frontend)
-- 🎨 Tabler Icons (UI)
+### Testes
 
-**Licença**: MIT (para fins educacionais)
+| Arquivo | O que testa |
+|---------|-------------|
+| `tests/test_rag.py` | loader encontra 10+ docs, chunker gera chunks com tamanho e overlap corretos, IDs únicos |
+| `tests/test_tools.py` | schemas das ferramentas têm campos obrigatórios, todas as ferramentas do schema estão no registry, CRUD de agenda e tarefas |
+| `tests/test_evaluation.py` | 10 questões com campos obrigatórios, scoring correto/parcial/incorreto, docs recuperados na resposta |
 
 ---
 
-**Última atualização**: 2026-05-16  
-**Status**: ✅ Production-ready para MVP  
-**Próximo release**: v1.1 (embeddings reais + backend)
+## IAs utilizadas no desenvolvimento
+
+| Ferramenta | Uso |
+|------------|-----|
+| **Claude Code (Anthropic)** | Arquitetura do sistema, implementação do backend Python, módulos RAG, tool calling, testes, debug de erros |
+| **Gemma 3 12B-IT** | Modelo de linguagem em produção (respostas ao usuário, decisão de ferramentas) |
+
+---
+
+## Critérios de avaliação atendidos
+
+| Critério | Peso | Status |
+|----------|------|--------|
+| **Funcionalidade** (3.1 RAG, 3.2 Agenda, 3.3 Tarefas, 3.4 Planejamento) | 20% | Implementado |
+| **RAG** (load → chunk → embed → retrieve → generate) | 20% | Implementado com TF-IDF e tentativa BERT |
+| **Tool Calling** (≥5 tools, LLM decide, logs) | 15% | 7 tools, LLM decide via JSON, logs no painel |
+| **Avaliação + Análise de erros** (10 perguntas, 3+ erros) | 20% | 10 perguntas, 5 erros documentados |
+| **Aprendizado** (≥2 funcionalidades, 1 interativa) | 15% | Exercícios, planejamento, active recall |
+| **Engenharia** (organização, separação, testes, logs) | 10% | Módulos separados, testes unitários, logs |
+
+**Diferencial:** interface gráfica com tema escuro, separação backend/frontend com API REST, persistência real em SQLite, fallback automático de embeddings, arquitetura modular documentada.
